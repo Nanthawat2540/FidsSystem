@@ -29,7 +29,7 @@ namespace FidsSystem.Services
             using var conn = CreateConnection();
             var hash = HashPassword(password);
             var result = await conn.QueryFirstOrDefaultAsync<dynamic>("sp_Admin_Create",
-                new { user.Username, PasswordHash = hash, user.Role },
+                new { user.Username, PasswordHash = hash, user.Role, user.AirlineCode },
                 commandType: System.Data.CommandType.StoredProcedure);
             return (int)(result?.NewId ?? 0);
         }
@@ -39,7 +39,7 @@ namespace FidsSystem.Services
             using var conn = CreateConnection();
             string? hash = newPassword != null ? HashPassword(newPassword) : null;
             await conn.ExecuteAsync("sp_Admin_Update",
-                new { user.Id, user.Role, user.Status, PasswordHash = hash },
+                new { user.Id, user.Role, user.Status, user.AirlineCode, PasswordHash = hash },
                 commandType: System.Data.CommandType.StoredProcedure);
         }
 

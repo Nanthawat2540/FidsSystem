@@ -47,6 +47,8 @@
         <a asp-action="Index" class="btn-clear"><i class="bi bi-x me-1"></i>Clear</a>
     </form>
 
+    @if (ViewBag.CanBulk == true)
+    {
     <!-- Bulk Actions Bar (hidden until checkbox selected) -->
     <div id="bulkBar" style="display:none; align-items:center; gap:10px; padding:10px 20px; background:var(--card-bg); border-bottom:1px solid var(--border-color);">
         <span id="bulkCount" style="color:#e4e6ef; font-size:.88rem;"></span>
@@ -60,14 +62,18 @@
         <button class="btn-search" onclick="applyBulk()"><i class="bi bi-pencil-square me-1"></i>Apply</button>
         <button class="btn-clear" onclick="clearBulk()"><i class="bi bi-x me-1"></i>Cancel</button>
     </div>
+    }
 
     <div class="table-responsive">
         <table class="table" id="flightTable">
             <thead>
                 <tr>
+                    @if (ViewBag.CanBulk == true)
+                    {
                     <th style="width:36px;">
                         <input type="checkbox" id="checkAll" onchange="toggleAll(this)" class="form-check-input" />
                     </th>
+                    }
                     <th style="width:10%;">Flight No.</th>
                     <th style="width:12%;">Airline</th>
                     <th style="width:7%; text-align:center;">Type</th>
@@ -83,7 +89,10 @@
                 @foreach (var item in Model)
                 {
                     <tr data-id="@item.Id">
+                        @if (ViewBag.CanBulk == true)
+                        {
                         <td><input type="checkbox" class="row-check form-check-input" value="@item.Id" onchange="onRowCheck()" /></td>
+                        }
                         <td class="fw-600">@item.FlightNumber</td>
                         <td>@(item.Airline ?? "-")</td>
                         <td style="text-align:center;">
@@ -103,20 +112,22 @@
                         <td style="color:#7e8299; font-size:.83rem;">@item.ScheduledTime.ToString("dd/MM/yyyy HH:mm")</td>
                         <td style="text-align:center; color:#7e8299;">@(item.Gate ?? item.Belt ?? "-")</td>
                         <td style="text-align:center;">
+                            @{
+                                var statusColor = item.Status switch {
+                                    "On Time"       => "#10B981",
+                                    "Delayed"       => "#F59E0B",
+                                    "Boarding"      => "#1A6BFA",
+                                    "Final Call"    => "#F97316",
+                                    "Check-In Open" => "#6366F1",
+                                    "Landed"        => "#06B6D4",
+                                    "Cancelled"     => "#EF4444",
+                                    "Departed"      => "#8B5CF6",
+                                    _ => "#b5b5c3"
+                                };
+                            }
+                            @if (ViewBag.CanEdit == true)
+                            {
                             <div class="status-dropdown" style="position:relative; display:inline-block;">
-                                @{
-                                    var statusColor = item.Status switch {
-                                        "On Time"       => "#10B981",
-                                        "Delayed"       => "#F59E0B",
-                                        "Boarding"      => "#1A6BFA",
-                                        "Final Call"    => "#F97316",
-                                        "Check-In Open" => "#6366F1",
-                                        "Landed"        => "#06B6D4",
-                                        "Cancelled"     => "#EF4444",
-                                        "Departed"      => "#8B5CF6",
-                                        _ => "#b5b5c3"
-                                    };
-                                }
                                 <button class="status-btn"
                                         style="background:none; border:none; font-size:.78rem; font-weight:700; color:@statusColor; cursor:pointer; padding:3px 6px; border-radius:4px;"
                                         onclick="openStatusPicker(this, @item.Id)"
@@ -124,14 +135,24 @@
                                     @(item.Status ?? "-") <i class="bi bi-caret-down-fill" style="font-size:.6rem;"></i>
                                 </button>
                             </div>
+                            }
+                            else
+                            {
+                            <span style="font-size:.78rem; font-weight:700; color:@statusColor;">@(item.Status ?? "-")</span>
+                            }
                         </td>
                         <td class="text-end">
                             <a asp-action="History" asp-route-id="@item.Id" class="btn-edit" style="background:transparent; color:#7e8299; border:1px solid var(--border-color);" title="History">
                                 <i class="bi bi-clock-history"></i>
                             </a>
+                            @if (ViewBag.CanEditFlight == true)
+                            {
                             <a asp-action="Edit" asp-route-id="@item.Id" class="btn-edit">
                                 <i class="bi bi-pencil-fill me-1"></i>Edit
                             </a>
+                            }
+                            @if (ViewBag.CanDelete == true)
+                            {
                             <form asp-action="Delete" asp-route-id="@item.Id" method="post"
                                   class="d-inline" id="del-@item.Id">
                                 <button type="button" class="btn-delete"
@@ -139,12 +160,13 @@
                                     <i class="bi bi-trash-fill me-1"></i>Del
                                 </button>
                             </form>
+                            }
                         </td>
                     </tr>
                 }
                 @if (!Model.Any())
                 {
-                    <tr><td colspan="10">
+                    <tr><td colspan="@(ViewBag.CanBulk == true ? 10 : 9)">
                         <div class="empty-state"><i class="bi bi-airplane"></i><p>No flights found.</p></div>
                     </td></tr>
                 }
