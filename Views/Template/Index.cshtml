@@ -1,0 +1,94 @@
+@model List<FidsSystem.Models.TemplateItem>
+@{ ViewData["Title"] = "Template"; }
+
+@section TopbarActions {
+    <a asp-action="Create" class="btn-add"><i class="bi bi-plus-lg"></i> Template</a>
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert-success-inline">
+        <i class="bi bi-check-circle-fill"></i>@TempData["Success"]
+    </div>
+}
+
+<div class="card">
+    <form method="get" class="filter-bar">
+        <select name="deviceType" class="filter-select">
+            <option value="">Device Type</option>
+            @foreach (var t in FidsSystem.Models.DeviceTypes.All)
+            {
+                <option value="@t" selected="@(ViewBag.DeviceType == t ? "selected" : null)">@t</option>
+            }
+        </select>
+        <select name="ratio" class="filter-select" style="min-width:110px;">
+            <option value="">Ratio</option>
+            <option value="16:9" selected="@(ViewBag.Ratio == "16:9" ? "selected" : null)">16:9</option>
+            <option value="9:16" selected="@(ViewBag.Ratio == "9:16" ? "selected" : null)">9:16</option>
+        </select>
+        <div class="filter-input-wrap">
+            <i class="bi bi-search"></i>
+            <input type="text" name="search" class="filter-input" placeholder="Search Template..."
+                   value="@ViewBag.Search" />
+        </div>
+        <button type="submit" class="btn-search"><i class="bi bi-search me-1"></i>Search</button>
+        <a asp-action="Index" class="btn-clear"><i class="bi bi-x me-1"></i>Clear</a>
+    </form>
+
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th style="width:40%;">Template Name</th>
+                    <th style="width:35%;">Device Type</th>
+                    <th style="width:10%; text-align:center;">Ratio</th>
+                    <th style="width:15%; text-align:right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td class="fw-600">@item.Name</td>
+                        <td style="color:#7e8299;">@item.DeviceType</td>
+                        <td style="text-align:center; color:#7e8299;">@item.Ratio</td>
+                        <td class="text-end">
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn-edit">
+                                <i class="bi bi-pencil-fill"></i> Edit
+                            </a>
+                            <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline"
+                                  id="del-tmpl-@item.Id">
+                                <button type="button" class="btn-delete"
+                                        onclick="confirmDelete('del-tmpl-@item.Id','Delete template &quot;@item.Name&quot;?')">
+                                    <i class="bi bi-trash-fill"></i> Delete
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="4">
+                            <div class="empty-state">
+                                <i class="bi bi-file-earmark-richtext"></i>
+                                <p>No templates found.</p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (Model.Any())
+    {
+        <div class="pagination-bar">
+            <button class="page-btn"><i class="bi bi-chevron-left" style="font-size:.75rem;"></i></button>
+            <button class="page-btn active">1</button>
+            <button class="page-btn"><i class="bi bi-chevron-right" style="font-size:.75rem;"></i></button>
+            <select class="page-btn" style="width:auto;padding:0 10px;font-size:.85rem;color:#7e8299;">
+                <option>20 / page</option><option>50 / page</option>
+            </select>
+        </div>
+    }
+</div>

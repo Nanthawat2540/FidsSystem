@@ -1,0 +1,80 @@
+@model IEnumerable<FidsSystem.Models.Zone>
+@{ ViewData["Title"] = "Zone"; }
+
+@section TopbarActions {
+    <a asp-action="Create" class="btn-add">
+        <i class="bi bi-plus-lg"></i> Zone
+    </a>
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert-success-inline">
+        <i class="bi bi-check-circle-fill"></i>@TempData["Success"]
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert-error-inline">
+        <i class="bi bi-x-circle-fill"></i>@TempData["Error"]
+    </div>
+}
+
+<div class="card">
+    <form method="get" class="filter-bar">
+        <div class="filter-input-wrap">
+            <i class="bi bi-search"></i>
+            <input type="text" name="search" class="filter-input" placeholder="Search Zone" value="@ViewBag.Search" />
+        </div>
+        <button type="submit" class="btn-search">
+            <i class="bi bi-search me-1"></i>Search
+        </button>
+        <a asp-action="Index" class="btn-clear">
+            <i class="bi bi-x me-1"></i>Clear
+        </a>
+    </form>
+
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th style="width:40%;">Zone Name</th>
+                    <th style="width:40%;">Remark</th>
+                    <th style="width:20%; text-align:right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td class="fw-600">@item.ZoneName</td>
+                        <td style="color:#7e8299;">@(string.IsNullOrEmpty(item.Remark) ? "-" : item.Remark)</td>
+                        <td class="text-end">
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn-edit">
+                                <i class="bi bi-pencil-fill"></i> Edit
+                            </a>
+                            <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline"
+                                  id="del-zone-@item.Id">
+                                <button type="button" class="btn-delete"
+                                        onclick="confirmDelete('del-zone-@item.Id','Delete zone &quot;@item.ZoneName&quot;?')">
+                                    <i class="bi bi-trash-fill"></i> Delete
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="3">
+                            <div class="empty-state">
+                                <i class="bi bi-grid-3x3-gap"></i>
+                                <p>No zones found. Click <strong>+ Zone</strong> to create one.</p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

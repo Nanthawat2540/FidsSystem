@@ -1,0 +1,320 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800;900&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Noto Sans Thai', 'Arial', sans-serif;
+    background: #0f0f1a;
+    color: #fff;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.container {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: #111118;
+}
+
+/* ===== TOP HEADER ===== */
+.header {
+    background: #0d1b5e;
+    height: 72px;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    border-bottom: 3px solid #1e35a0;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.header-plane {
+    width: 38px;
+    height: 38px;
+    fill: white;
+    opacity: 0.9;
+    flex-shrink: 0;
+}
+
+.header-title {
+    font-size: 30px;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: 4px;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.airport-pill {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 50px;
+    padding: 5px 16px 5px 5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.airport-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 800;
+    color: #0d1b5e;
+    text-align: center;
+    line-height: 1.2;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.airport-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.airport-th {
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: #fff;
+}
+
+.airport-en {
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.6);
+    line-height: 1;
+}
+
+.time-pill {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 50px;
+    padding: 8px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    white-space: nowrap;
+}
+
+.lang-badge {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: 1px;
+    min-width: 38px;
+    text-align: center;
+    transition: background .3s;
+}
+
+/* ===== COLUMN HEADER ===== */
+.col-header {
+    background: #162070;
+    padding: 10px 24px;
+    display: grid;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.65);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+    border-bottom: 1px solid #0d1b5e;
+}
+
+/* Departure: เที่ยวบิน | สายการบิน | ปลายทาง | เวลา | ประตู | หมายเหตุ */
+.dep-cols {
+    grid-template-columns: 110px 170px 1fr 90px 80px 180px;
+}
+
+/* Arrival: เที่ยวบิน | สายการบิน | ต้นทาง | เวลา | สายพาน | หมายเหตุ */
+.arr-cols {
+    grid-template-columns: 110px 170px 1fr 90px 90px 180px;
+}
+
+/* ===== FLIGHT BOARD ===== */
+.flight-board {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.flight-row {
+    padding: 0 24px;
+    display: grid;
+    gap: 8px;
+    align-items: center;
+    border-bottom: 1px solid #1e1e30;
+    flex: 1;
+    min-height: 0;
+    color: white;
+}
+
+.flight-row:nth-child(odd)  { background: #121220; }
+.flight-row:nth-child(even) { background: #16162a; }
+
+.time {
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.flight-number {
+    font-size: 18px;
+    font-weight: 800;
+    color: #90CAF9;
+}
+
+.airline {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.airline-logo {
+    padding: 3px 9px;
+    border-radius: 4px;
+    font-weight: 800;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+.air-asia  { background: #DC143C; color: #fff; }
+.nok-air   { background: #FFB300; color: #000; }
+.lion-air  { background: #E53935; color: #fff; }
+.vietjet   { background: #CC0000; color: #fff; }
+
+.from {
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.gate-badge {
+    background: #1565C0;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 6px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 16px;
+    width: fit-content;
+}
+
+.status {
+    padding: 5px 10px;
+    border-radius: 6px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+/* Status colors */
+.s-checkin   { background: #1A237E; color: #C5CAE9; }
+.s-boarding  { background: #BF360C; color: #FFCCBC; }
+.s-gateopen  { background: #0D47A1; color: #BBDEFB; }
+.s-delayed   { background: #F57F17; color: #FFF8E1; }
+.s-cancelled { background: #B71C1C; color: #FFCDD2; }
+.s-landed    { background: #1B5E20; color: #C8E6C9; }
+.s-baggage   { background: #006064; color: #B2EBF2; }
+.s-expected  { background: #4A148C; color: #E1BEE7; }
+.s-default   { background: #263238; color: #CFD8DC; }
+
+/* ===== FOOTER ===== */
+.footer {
+    height: 52px;
+    display: flex;
+    align-items: stretch;
+    flex-shrink: 0;
+}
+
+.footer-text {
+    flex: 1;
+    background: #0d1b5e;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    overflow: hidden;
+}
+
+.footer-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    white-space: nowrap;
+    animation: scrollText 22s linear infinite;
+}
+
+.plane-icon {
+    width: 16px;
+    height: 16px;
+    fill: white;
+    flex-shrink: 0;
+}
+
+.footer-time {
+    background: #091249;
+    min-width: 230px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 20px;
+}
+
+.current-time {
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+}
+
+@keyframes scrollText {
+    0%   { transform: translateX(100vw); }
+    100% { transform: translateX(-100%); }
+}
+
+/* =============================================
+   PORTRAIT 9:16  — data-orient="v"
+   ============================================= */
+.container[data-orient="v"] .header          { height: 58px; padding: 0 14px; }
+.container[data-orient="v"] .header-title    { font-size: 22px; letter-spacing: 2px; }
+.container[data-orient="v"] .airport-icon    { width: 32px; height: 32px; font-size: 8px; }
+.container[data-orient="v"] .airport-th      { font-size: 9px; }
+.container[data-orient="v"] .airport-en      { font-size: 8px; }
+.container[data-orient="v"] .time-pill       { font-size: 11px; padding: 5px 12px; }
+.container[data-orient="v"] .header-plane    { width: 26px; height: 26px; }
+
+.container[data-orient="v"] .col-header      { padding: 8px 14px; font-size: 10px; gap: 5px; }
+.container[data-orient="v"] .dep-cols        { grid-template-columns: 78px 100px 1fr 64px 55px 108px; }
+.container[data-orient="v"] .arr-cols        { grid-template-columns: 78px 100px 1fr 64px 64px 108px; }
+
+.container[data-orient="v"] .flight-row      { padding: 0 14px; gap: 5px; }
+.container[data-orient="v"] .time            { font-size: 15px; }
+.container[data-orient="v"] .flight-number   { font-size: 13px; }
+.container[data-orient="v"] .airline-logo    { font-size: 9px; padding: 2px 6px; }
+.container[data-orient="v"] .from            { font-size: 12px; }
+.container[data-orient="v"] .gate-badge      { font-size: 13px; padding: 3px 7px; }
+.container[data-orient="v"] .status          { font-size: 9px; padding: 3px 6px; }
+
+.container[data-orient="v"] .footer         { height: 44px; }
+.container[data-orient="v"] .footer-time    { min-width: 185px; }
+.container[data-orient="v"] .current-time   { font-size: 12px; }

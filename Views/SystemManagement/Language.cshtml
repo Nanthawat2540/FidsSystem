@@ -1,0 +1,30 @@
+@{ ViewData["Title"] = "Language Management"; }
+
+@if (TempData["Success"] != null)
+{
+    <div style="background:#e8f7ee; color:#2e7d32; border-radius:8px; padding:12px 18px; margin-bottom:16px; font-size:0.9rem;">
+        <i class="bi bi-check-circle me-2"></i>@TempData["Success"]
+    </div>
+}
+
+<div class="card" style="max-width:520px;">
+    <form asp-action="Language" method="post">
+        <div class="mb-4">
+            <label class="form-label-fids">
+                Select Language Display <span class="required-star">*</span>
+            </label>
+            @{var lang = ViewBag.CurrentLanguage as string ?? "Lao";}
+            <select name="language" class="filter-select" style="width:100%; min-width:unset;" required>
+                @if (lang == "Lao") { <option value="Lao" selected="selected">Lao</option> }
+                else { <option value="Lao">Lao</option> }
+                @if (lang == "Thai") { <option value="Thai" selected="selected">Thai</option> }
+                else { <option value="Thai">Thai</option> }
+                @if (lang == "English") { <option value="English" selected="selected">English</option> }
+                else { <option value="English">English</option> }
+            </select>
+        </div>
+        <div>
+            <button type="submit" class="btn-save">Save</button>
+        </div>
+    </form>
+</div>

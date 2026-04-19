@@ -1,0 +1,63 @@
+@model IEnumerable<FidsSystem.Models.FlightStatusHistory>
+@{
+    ViewData["Title"] = $"History — {(ViewBag.Flight as FidsSystem.Models.Flight)?.FlightNumber}";
+    var flight = ViewBag.Flight as FidsSystem.Models.Flight;
+}
+
+@section TopbarActions {
+    <a asp-action="Index" class="btn-edit">
+        <i class="bi bi-arrow-left me-1"></i>Back
+    </a>
+}
+
+@if (flight != null)
+{
+    <div class="card" style="margin-bottom:16px; padding:16px 20px;">
+        <span class="fw-600" style="font-size:1.1rem;">@flight.FlightNumber</span>
+        <span style="color:#7e8299; margin-left:12px;">@(flight.Airline ?? "-")</span>
+        <span style="color:#7e8299; margin-left:12px;">@(flight.Origin ?? "-") → @(flight.Destination ?? "-")</span>
+        <span style="color:#7e8299; margin-left:12px;">@flight.ScheduledTime.ToString("dd/MM/yyyy HH:mm")</span>
+    </div>
+}
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Old Status</th>
+                    <th></th>
+                    <th>New Status</th>
+                    <th>Gate Change</th>
+                    <th>Changed By</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var h in Model)
+                {
+                    <tr>
+                        <td style="color:#7e8299; font-size:.82rem;">@h.ChangedAt.ToString("dd/MM/yyyy HH:mm:ss")</td>
+                        <td style="color:#b5b5c3;">@(h.OldStatus ?? "-")</td>
+                        <td style="color:#7e8299;"><i class="bi bi-arrow-right"></i></td>
+                        <td style="font-weight:600; color:#e4e6ef;">@(h.NewStatus ?? "-")</td>
+                        <td style="color:#7e8299;">
+                            @if (h.OldGate != h.NewGate && h.NewGate != null)
+                            {
+                                <span>@(h.OldGate ?? "-") → <strong>@h.NewGate</strong></span>
+                            }
+                            else { <span>-</span> }
+                        </td>
+                        <td style="color:#7e8299; font-size:.82rem;">@(h.ChangedBy ?? "system")</td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="6">
+                        <div class="empty-state"><i class="bi bi-clock-history"></i><p>No history recorded.</p></div>
+                    </td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

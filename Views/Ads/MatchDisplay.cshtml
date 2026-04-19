@@ -1,0 +1,174 @@
+@model IEnumerable<FidsSystem.Models.MatchDisplay>
+@{ ViewData["Title"] = "Match Display"; }
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert-success-inline">
+        <i class="bi bi-check-circle-fill"></i>@TempData["Success"]
+    </div>
+}
+
+<div class="card">
+    <form method="get" class="filter-bar">
+        <select name="zone" class="filter-select" style="min-width:120px;">
+            <option value="">Zone</option>
+            @if (ViewBag.Zones != null)
+            {
+                foreach (var z in (IEnumerable<FidsSystem.Models.Zone>)ViewBag.Zones)
+                {
+                    if (ViewBag.ZoneFilter?.ToString() == z.Id.ToString())
+                    {
+                        <option value="@z.Id" selected="selected">@z.ZoneName</option>
+                    }
+                    else
+                    {
+                        <option value="@z.Id">@z.ZoneName</option>
+                    }
+                }
+            }
+        </select>
+        <select name="status" class="filter-select" style="min-width:140px;">
+            <option value="">Status</option>
+            @if (ViewBag.StatusFilter?.ToString() == "matched")
+            {
+                <option value="matched" selected="selected">Matched</option>
+            }
+            else
+            {
+                <option value="matched">Matched</option>
+            }
+            @if (ViewBag.StatusFilter?.ToString() == "notmatch")
+            {
+                <option value="notmatch" selected="selected">Not Match</option>
+            }
+            else
+            {
+                <option value="notmatch">Not Match</option>
+            }
+        </select>
+        <div class="filter-input-wrap">
+            <i class="bi bi-search"></i>
+            <input type="text" name="search" class="filter-input"
+                   placeholder="Search Device name..." value="@ViewBag.Search" />
+        </div>
+        <button type="submit" class="btn-search"><i class="bi bi-search me-1"></i>Search</button>
+        <a asp-action="MatchDisplay" class="btn-clear"><i class="bi bi-x me-1"></i>Clear</a>
+    </form>
+
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th style="width:8%;">Zone</th>
+                    <th style="width:15%;">Display Name</th>
+                    <th style="width:8%; text-align:center;">Ratio</th>
+                    <th style="width:20%;">Playlist Name</th>
+                    <th style="width:18%; text-align:center;">Status (Match)</th>
+                    <th style="width:16%;">Matched At</th>
+                    <th style="width:15%; text-align:right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            <span class="badge-role badge-admin" style="font-size:.75rem;">@item.ZoneName</span>
+                        </td>
+                        <td class="fw-600">@item.DisplayName</td>
+                        <td style="text-align:center; color:#7e8299;">@item.Ratio</td>
+                        <td style="color:@(item.IsMatched ? "#0095ff" : "#b5b5c3");">
+                            @(string.IsNullOrEmpty(item.PlaylistName) ? "-" : item.PlaylistName)
+                        </td>
+                        <td style="text-align:center;">
+                            @if (item.IsMatched)
+                            {
+                                <span class="status-match matched">
+                                    <i class="bi bi-display-fill"></i> Matched
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="status-match">
+                                    <i class="bi bi-display"></i> Not Match
+                                </span>
+                            }
+                        </td>
+                        <td style="color:#b5b5c3; font-size:.85rem;">
+                            @(item.MatchedAt.HasValue ? item.MatchedAt.Value.ToString("dd/MM/yyyy HH:mm") : "-")
+                        </td>
+                        <td class="text-end">
+                            <button type="button" class="btn-add"
+                                    style="padding:7px 16px; font-size:.83rem;"
+                                    onclick="openMatchModal(@item.DisplayId, '@item.DisplayName.Replace("'","\\'")')">
+                                <i class="bi bi-link-45deg"></i> Match
+                            </button>
+                            @if (item.IsMatched)
+                            {
+                                <form asp-action="RemoveMatchByDisplay" asp-route-displayId="@item.DisplayId"
+                                      method="post" class="d-inline" id="del-match-@item.DisplayId">
+                                    <button type="button" class="btn-delete"
+                                            onclick="confirmDelete('del-match-@item.DisplayId','Remove match for &quot;@item.DisplayName&quot;?')"
+                                            style="padding:7px 16px; font-size:.83rem;">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="7">
+                            <div class="empty-state">
+                                <i class="bi bi-display"></i>
+                                <p>No display devices found.</p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Match Playlist Modal -->
+<div id="matchModal" class="modal-overlay" onclick="if(event.target===this)this.classList.remove('show')">
+    <div class="modal-box">
+        <div class="modal-title">
+            <i class="bi bi-link-45deg"></i>
+            Match Playlist to <span id="matchModalDeviceName" style="color:var(--primary);"></span>
+        </div>
+        <form asp-action="SetMatchByDisplay" method="post">
+            <input type="hidden" name="displayId" id="matchDisplayId" />
+            <div class="mb-4">
+                <label class="form-label-fids">Select Playlist <span class="required-star">*</span></label>
+                <select name="playlistId" class="filter-select" style="width:100%; min-width:unset;" required>
+                    <option value="">-- Select Playlist --</option>
+                    @if (ViewBag.Playlists != null)
+                    {
+                        foreach (var pl in (IEnumerable<FidsSystem.Models.AdPlaylist>)ViewBag.Playlists)
+                        {
+                            <option value="@pl.Id">@pl.Name (@pl.TotalCount files)</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="d-flex justify-content-end gap-3">
+                <button type="button" class="btn-cancel" onclick="document.getElementById('matchModal').classList.remove('show')">Cancel</button>
+                <button type="submit" class="btn-save"><i class="bi bi-link-45deg me-1"></i>Confirm Match</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+function openMatchModal(displayId, displayName) {
+    document.getElementById('matchDisplayId').value = displayId;
+    document.getElementById('matchModalDeviceName').textContent = displayName;
+    document.getElementById('matchModal').classList.add('show');
+}
+</script>
+}

@@ -1,0 +1,107 @@
+@model FidsSystem.Models.DisplayDevice
+@{
+    Layout = null;
+    var tmpl       = ViewBag.Template as FidsSystem.Models.TemplateItem;
+    var deviceType = tmpl?.DeviceType ?? "";
+    var ratio      = tmpl?.Ratio ?? Model.Ratio ?? "16:9";
+    var isPortrait = ratio == "9:16";
+}
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Preview — @Model.DeviceName</title>
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body {
+            width: 100%; height: 100%;
+            background: #000;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #previewCanvas { display: block; }
+
+        /* info overlay (top-left, fade on hover) */
+        #previewInfo {
+            position: fixed;
+            top: 14px; left: 14px;
+            background: rgba(0,0,0,.55);
+            border: 1px solid rgba(255,255,255,.15);
+            border-radius: 10px;
+            padding: 8px 14px;
+            color: #fff;
+            font: 12px/1.6 'Segoe UI', sans-serif;
+            opacity: 0;
+            transition: opacity .3s;
+            pointer-events: none;
+            z-index: 10;
+        }
+        body:hover #previewInfo { opacity: 1; }
+        #previewInfo strong { color: #4FC3F7; }
+    </style>
+</head>
+<body>
+    <canvas id="previewCanvas"></canvas>
+
+    <div id="previewInfo">
+        <strong>@Model.DeviceName</strong><br>
+        @deviceType &nbsp;·&nbsp; @ratio
+        @if (!string.IsNullOrEmpty(Model.DataSet)) {
+            <br><span style="color:#aaa;">@Model.DataSet</span>
+        }
+    </div>
+
+    <!-- drawing engine -->
+    <script src="~/assets/js/template-draw.js"></script>
+    @if (deviceType == "Baggage Claim") {
+        <script src="~/assets/js/template-draw-baggage-claim.js"></script>
+    } else if (deviceType == "Baggage Claim Information") {
+        <script src="~/assets/js/template-draw-baggage-info.js"></script>
+    } else if (deviceType == "Check-in") {
+        <script src="~/assets/js/template-draw-checkin.js"></script>
+    } else {
+        <script src="~/assets/js/template-draw-board.js"></script>
+    }
+
+    <script>
+    (function () {
+        const TYPE = '@Html.Raw(deviceType)';
+        const IS_P = '@ratio' === '9:16';
+
+        function paint() {
+            const canvas = document.getElementById('previewCanvas');
+            if (!canvas || typeof DRAWERS === 'undefined') return;
+
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+            let cw, ch;
+
+            if (IS_P) {
+                ch = vh;
+                cw = Math.round(ch * 9 / 16);
+                if (cw > vw) { cw = vw; ch = Math.round(cw * 16 / 9); }
+            } else {
+                cw = vw;
+                ch = Math.round(cw * 9 / 16);
+                if (ch > vh) { ch = vh; cw = Math.round(ch * 16 / 9); }
+            }
+
+            canvas.width  = cw;
+            canvas.height = ch;
+            canvas.style.width  = cw + 'px';
+            canvas.style.height = ch + 'px';
+
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, cw, ch);
+            if (DRAWERS[TYPE]) DRAWERS[TYPE](ctx, cw, ch);
+        }
+
+        window.addEventListener('load',   () => requestAnimationFrame(paint));
+        window.addEventListener('resize', () => requestAnimationFrame(paint));
+    })();
+    </script>
+</body>
+</html>

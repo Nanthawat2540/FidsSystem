@@ -1,0 +1,143 @@
+@model FidsSystem.Models.FlightReportData
+@{ ViewData["Title"] = "Reports"; }
+
+@section TopbarActions {
+    <form method="get" class="d-inline-flex align-items-center gap-2">
+        <input type="date" name="date" value="@ViewBag.ReportDate"
+               class="filter-select" style="min-width:160px;" />
+        <button type="submit" class="btn-search">
+            <i class="bi bi-search me-1"></i>View
+        </button>
+    </form>
+}
+
+<!-- Stat cards -->
+<div class="stats-grid" style="display:grid; grid-template-columns:repeat(6,1fr); gap:12px; margin-bottom:20px;">
+    <div class="stat-card">
+        <div class="stat-label"><i class="bi bi-airplane me-1"></i>Departures</div>
+        <div class="stat-value">@Model.TotalDepartures</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label"><i class="bi bi-airplane-fill me-1" style="transform:rotate(180deg); display:inline-block;"></i>Arrivals</div>
+        <div class="stat-value">@Model.TotalArrivals</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label" style="color:#10B981;"><i class="bi bi-check-circle me-1"></i>On Time</div>
+        <div class="stat-value" style="color:#10B981;">@Model.OnTime</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label" style="color:#F59E0B;"><i class="bi bi-clock-history me-1"></i>Delayed</div>
+        <div class="stat-value" style="color:#F59E0B;">@Model.Delayed</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label" style="color:#EF4444;"><i class="bi bi-x-circle me-1"></i>Cancelled</div>
+        <div class="stat-value" style="color:#EF4444;">@Model.Cancelled</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label" style="color:#6366F1;"><i class="bi bi-door-open me-1"></i>Boarded</div>
+        <div class="stat-value" style="color:#6366F1;">@Model.Boarded</div>
+    </div>
+</div>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px;">
+
+    <!-- By Airline -->
+    <div class="card" style="padding:0;">
+        <div class="card-header-inner">
+            <i class="bi bi-bar-chart me-1"></i> Flights by Airline
+        </div>
+        <div class="table-responsive">
+            <table class="table">
+                <thead><tr><th>Airline</th><th style="text-align:right;">Flights</th></tr></thead>
+                <tbody>
+                    @if (!Model.ByAirline.Any())
+                    {
+                        <tr><td colspan="2"><div class="empty-state"><i class="bi bi-bar-chart"></i><p>No data</p></div></td></tr>
+                    }
+                    @foreach (var a in Model.ByAirline)
+                    {
+                        <tr>
+                            <td>@a.Airline</td>
+                            <td style="text-align:right; font-weight:600;">@a.Count</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- By Status -->
+    <div class="card" style="padding:0;">
+        <div class="card-header-inner">
+            <i class="bi bi-pie-chart me-1"></i> Flights by Status
+        </div>
+        <div class="table-responsive">
+            <table class="table">
+                <thead><tr><th>Status</th><th style="text-align:right;">Count</th></tr></thead>
+                <tbody>
+                    @if (!Model.ByStatus.Any())
+                    {
+                        <tr><td colspan="2"><div class="empty-state"><i class="bi bi-pie-chart"></i><p>No data</p></div></td></tr>
+                    }
+                    @foreach (var s in Model.ByStatus)
+                    {
+                        <tr>
+                            <td>@s.Status</td>
+                            <td style="text-align:right; font-weight:600;">@s.Count</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Delayed / Cancelled -->
+<div class="card">
+    <div class="card-header-inner" style="padding:16px 20px; border-bottom:1px solid var(--border-color);">
+        <i class="bi bi-exclamation-triangle me-1" style="color:#F59E0B;"></i> Delayed &amp; Cancelled Flights
+        <span style="color:#7e8299; font-size:.8rem; margin-left:8px;">for @Model.ReportDate.ToString("dd/MM/yyyy")</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Flight</th><th>Airline</th><th>Type</th>
+                    <th>Route</th><th>Scheduled</th><th>Gate/Belt</th><th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.RecentDelays.Any())
+                {
+                    <tr><td colspan="7">
+                        <div class="empty-state"><i class="bi bi-check-circle" style="color:#10B981;"></i><p>No delays or cancellations today.</p></div>
+                    </td></tr>
+                }
+                @foreach (var f in Model.RecentDelays)
+                {
+                    var sc = f.Status == "Delayed" ? "#F59E0B" : "#EF4444";
+                    <tr>
+                        <td class="fw-600">@f.FlightNumber</td>
+                        <td>@(f.Airline ?? "-")</td>
+                        <td>
+                            <span class="badge-role @(f.FlightType=="Departure"?"badge-admin":"")" style="font-size:.72rem;">
+                                @(f.FlightType == "Departure" ? "DEP" : "ARR")
+                            </span>
+                        </td>
+                        <td style="color:#7e8299;">@(f.Origin ?? "-") → @(f.Destination ?? "-")</td>
+                        <td style="color:#7e8299; font-size:.85rem;">@f.ScheduledTime.ToString("HH:mm")</td>
+                        <td style="color:#7e8299;">@(f.Gate ?? f.Belt ?? "-")</td>
+                        <td><span style="color:@sc; font-weight:600; font-size:.8rem;">@f.Status</span></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+.stat-card { background:var(--card-bg); border:1px solid var(--border-color); border-radius:10px; padding:16px 18px; }
+.stat-label { font-size:.78rem; color:#7e8299; margin-bottom:6px; font-weight:500; }
+.stat-value { font-size:2rem; font-weight:700; color:#e4e6ef; }
+.card-header-inner { padding:14px 20px; font-weight:600; color:#e4e6ef; }
+</style>

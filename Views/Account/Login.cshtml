@@ -1,0 +1,160 @@
+@{ Layout = null; }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login - FIDS System</title>
+
+    <!-- Plugins -->
+    <link rel="stylesheet" href="~/plugins/bootstrap/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/plugins/bootstrap-icons/css/bootstrap-icons.min.css" />
+
+    <!-- Font Awesome 6 Free -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- Flaticon CDN (Uicons by Flaticon) -->
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/2.6.0/uicons-regular-rounded/css/uicons-regular-rounded.css" />
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/2.6.0/uicons-solid-rounded/css/uicons-solid-rounded.css" />
+
+    <!-- Custom -->
+    <link rel="stylesheet" href="~/assets/css/style.css" />
+</head>
+<body class="login-page">
+    <!-- Particle Canvas Background -->
+    <canvas id="bgCanvas"></canvas>
+
+    <div class="login-card">
+        <div class="login-icon"><i class="bi bi-house-gear"></i></div>
+        <div class="login-title">Welcome FIDS</div>
+        <div class="login-subtitle">Please enter your details to get started</div>
+
+        <form asp-action="Login" method="post">
+            <div class="mb-3 text-start">
+                <label class="form-label-fids">
+                    Username <span class="required-star">*</span>
+                </label>
+                <div class="input-icon-wrap">
+                    <i class="bi bi-person input-icon"></i>
+                    <input type="text" name="username" class="form-control-fids"
+                           placeholder="Input Username" required />
+                </div>
+            </div>
+            <div class="mb-4 text-start">
+                <label class="form-label-fids">
+                    Password <span class="required-star">*</span>
+                </label>
+                <div class="input-icon-wrap">
+                    <i class="bi bi-key input-icon"></i>
+                    <input type="password" name="password" id="passwordInput" class="form-control-fids"
+                           placeholder="Input Password" required />
+                    <span class="eye-toggle" onclick="togglePwd()">
+                        <i class="bi bi-eye-slash" id="eyeIcon"></i>
+                    </span>
+                </div>
+            </div>
+
+            <div asp-validation-summary="ModelOnly" class="alert-error-inline mb-3"></div>
+
+            <button type="submit" class="btn-login">
+                <i class="bi bi-box-arrow-in-right me-2"></i>Login
+            </button>
+        </form>
+    </div>
+
+    <!-- Plugins JS -->
+    <script src="~/plugins/jquery/jquery.min.js"></script>
+    <script src="~/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Canvas Particle Animation -->
+    <script>
+    (function () {
+        const canvas = document.getElementById('bgCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        const COUNT = 65;
+        const LINK_DIST = 130;
+        const COLORS = [
+            'rgba(37,99,235,',   // blue
+            'rgba(14,165,233,',  // sky
+            'rgba(99,102,241,'   // indigo
+        ];
+
+        function resize() {
+            canvas.width  = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resize();
+        window.addEventListener('resize', resize);
+
+        class Particle {
+            constructor() { this.reset(true); }
+            reset(init) {
+                this.x  = Math.random() * canvas.width;
+                this.y  = init ? Math.random() * canvas.height : -8;
+                this.vx = (Math.random() - 0.5) * 0.35;
+                this.vy = (Math.random() - 0.5) * 0.35;
+                this.r  = Math.random() * 2.2 + 0.8;
+                this.a  = Math.random() * 0.35 + 0.08;
+                this.col= COLORS[Math.floor(Math.random() * COLORS.length)];
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                if (this.x < -10 || this.x > canvas.width  + 10) this.vx *= -1;
+                if (this.y < -10 || this.y > canvas.height + 10) this.vy *= -1;
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+                ctx.fillStyle = this.col + this.a + ')';
+                ctx.fill();
+            }
+        }
+
+        for (let i = 0; i < COUNT; i++) particles.push(new Particle());
+
+        function drawLinks() {
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx   = particles[i].x - particles[j].x;
+                    const dy   = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < LINK_DIST) {
+                        const op = 0.10 * (1 - dist / LINK_DIST);
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.strokeStyle = 'rgba(37,99,235,' + op + ')';
+                        ctx.lineWidth   = 0.8;
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => { p.update(); p.draw(); });
+            drawLinks();
+            requestAnimationFrame(animate);
+        }
+        animate();
+    })();
+    </script>
+
+    <script>
+        function togglePwd() {
+            const input = document.getElementById('passwordInput');
+            const icon  = document.getElementById('eyeIcon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'bi bi-eye';
+            } else {
+                input.type = 'password';
+                icon.className = 'bi bi-eye-slash';
+            }
+        }
+    </script>
+</body>
+</html>

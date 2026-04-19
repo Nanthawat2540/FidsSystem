@@ -1,0 +1,235 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700;800;900&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Noto Sans Thai', sans-serif;
+    background: #111;
+    color: #fff;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.bc-container {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: #111;
+}
+
+/* ===== TOP ROW: airline logo | flight info ===== */
+.bc-top {
+    display: grid;
+    grid-template-columns: 38% 62%;
+    height: 28vh;
+    flex-shrink: 0;
+}
+
+.bc-airline {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.bc-airline-red { background: #DC143C; }
+.bc-airline-blue { background: #1565C0; }
+.bc-airline-orange { background: #E65100; }
+.bc-airline-dark { background: #1a1a1a; }
+
+.bc-airline img {
+    max-width: 75%;
+    max-height: 75%;
+    object-fit: contain;
+}
+
+.bc-airline-text {
+    font-size: 42px;
+    font-weight: 900;
+    color: white;
+    letter-spacing: 2px;
+    text-align: center;
+}
+
+.bc-flight-info {
+    background: #1a1a1a;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 30px;
+    border-left: 2px solid #333;
+    gap: 6px;
+}
+
+.bc-flight-label {
+    font-size: 15px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.45);
+    text-transform: uppercase;
+    letter-spacing: 4px;
+}
+
+.bc-flight-number {
+    font-size: clamp(48px, 7vw, 80px);
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: 6px;
+    line-height: 1;
+}
+
+/* ===== MIDDLE: FROM + City ===== */
+.bc-middle {
+    flex: 1;
+    background: linear-gradient(180deg, #1565C0 0%, #0D47A1 45%, #0a1a6e 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 40px;
+    gap: 12px;
+}
+
+.bc-from-label {
+    font-size: 20px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.55);
+    letter-spacing: 8px;
+    text-transform: uppercase;
+}
+
+.bc-city {
+    font-size: clamp(52px, 9vw, 100px);
+    font-weight: 900;
+    color: #fff;
+    text-align: center;
+    line-height: 1.1;
+    text-shadow: 0 2px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* ===== BOTTOM: status | airport + time ===== */
+.bc-bottom {
+    height: 78px;
+    background: #0d1b5e;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32px;
+    flex-shrink: 0;
+    border-top: 2px solid #1e35a0;
+}
+
+.bc-status-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.bc-status-label {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.45);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.bc-status-value {
+    font-size: 20px;
+    font-weight: 800;
+}
+
+.bc-airport-time {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.bc-airport-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.bc-airport-name { font-size: 13px; font-weight: 700; }
+.bc-airport-en   { font-size: 10px; color: rgba(255, 255, 255, 0.55); }
+
+.bc-time {
+    font-size: 18px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* ===== Empty state ===== */
+.bc-empty {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    color: rgba(255, 255, 255, 0.25);
+    background: #111;
+}
+
+/* =============================================
+   PORTRAIT 9:16  — data-orient="v"
+   ============================================= */
+.bc-container[data-orient="v"] .bc-top {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1fr;
+    height: 44vh;
+}
+
+.bc-container[data-orient="v"] .bc-airline {
+    border-right: none;
+    border-bottom: 2px solid rgba(255,255,255,0.1);
+    min-height: 22vh;
+}
+
+.bc-container[data-orient="v"] .bc-flight-info {
+    border-left: none;
+    border-top: none;
+    min-height: 22vh;
+}
+
+.bc-container[data-orient="v"] .bc-flight-number {
+    font-size: clamp(40px, 12vw, 72px);
+    letter-spacing: 4px;
+}
+
+.bc-container[data-orient="v"] .bc-city {
+    font-size: clamp(38px, 12vw, 72px);
+}
+
+.bc-container[data-orient="v"] .bc-from-label {
+    font-size: 16px;
+    letter-spacing: 6px;
+}
+
+.bc-container[data-orient="v"] .bc-bottom {
+    height: auto;
+    min-height: 88px;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 6px;
+    padding: 14px 24px;
+}
+
+.bc-container[data-orient="v"] .bc-airport-time {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+.bc-container[data-orient="v"] .bc-airport-info {
+    align-items: flex-start;
+}
+
+/* Status colors */
+.s-landed    { color: #A5D6A7; }
+.s-baggage   { color: #80DEEA; }
+.s-expected  { color: #CE93D8; }
+.s-delayed   { color: #FFE082; }
+.s-cancelled { color: #EF9A9A; }
+.s-default   { color: #B0BEC5; }

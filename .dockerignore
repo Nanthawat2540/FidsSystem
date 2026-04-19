@@ -1,0 +1,16 @@
+# Build artifacts
+bin/
+obj/
+publish/
+
+# IDE
+.vs/
+*.user
+
+# Secrets & local env
+.env
+appsettings.Development.json
+
+# Misc
+*.zip
+*.pdb

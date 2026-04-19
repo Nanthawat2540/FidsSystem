@@ -1,0 +1,24 @@
+@model FidsSystem.Models.Zone
+@{ ViewData["Title"] = "Edit Zone"; }
+
+@section TopbarActions {
+    <button type="submit" form="zoneForm" class="btn-save">Save</button>
+}
+
+<div class="card" style="max-width:520px;">
+    <form id="zoneForm" asp-action="Edit" asp-route-id="@Model.Id" method="post">
+        <input asp-for="Id" type="hidden" />
+        <div class="mb-4">
+            <label class="form-label-fids">Zone Name <span class="required-star">*</span></label>
+            <input asp-for="ZoneName" class="form-control-fids" maxlength="100" required />
+            <span asp-validation-for="ZoneName" class="text-danger" style="font-size:0.8rem;"></span>
+        </div>
+        <div class="mb-4">
+            <label class="form-label-fids">Remark</label>
+            <input asp-for="Remark" class="form-control-fids" maxlength="500" />
+        </div>
+        <div>
+            <a asp-action="Index" class="btn-cancel">Cancel</a>
+        </div>
+    </form>
+</div>

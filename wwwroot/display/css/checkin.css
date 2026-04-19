@@ -1,0 +1,231 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700;800;900&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Noto Sans Thai', sans-serif;
+    background: #1C1C1E;
+    color: #fff;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.ci-container {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: #1C1C1E;
+}
+
+/* ===== MAIN CONTENT ===== */
+.ci-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 60px 20px;
+    gap: 32px;
+}
+
+.ci-title {
+    font-size: clamp(26px, 3.8vw, 50px);
+    font-weight: 900;
+    color: #fff;
+    text-align: center;
+    letter-spacing: 1px;
+    line-height: 1.2;
+}
+
+/* ===== COMMON (all airlines) card ===== */
+.ci-card {
+    background: linear-gradient(135deg, #1565C0 0%, #0D47A1 60%, #0a1a6e 100%);
+    border-radius: 20px;
+    padding: 28px 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    width: 65%;
+    min-height: 110px;
+    box-shadow: 0 8px 40px rgba(13, 27, 94, 0.7);
+}
+
+.ci-plane-icon {
+    width: 56px;
+    height: 56px;
+    fill: white;
+    flex-shrink: 0;
+}
+
+.ci-card-text {
+    font-size: clamp(26px, 3.2vw, 46px);
+    font-weight: 900;
+    color: #fff;
+}
+
+/* ===== SPECIFIC FLIGHT card ===== */
+.ci-flight-card {
+    background: linear-gradient(135deg, #0D47A1 0%, #1565C0 100%);
+    border-radius: 20px;
+    padding: 30px 50px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    width: 70%;
+    box-shadow: 0 8px 40px rgba(13, 27, 94, 0.7);
+}
+
+.ci-airline-logo {
+    max-height: 60px;
+    max-width: 160px;
+    object-fit: contain;
+}
+
+.ci-airline-text {
+    font-size: 28px;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: 2px;
+}
+
+.ci-flight-num {
+    font-size: clamp(36px, 5.5vw, 64px);
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: 5px;
+    line-height: 1;
+}
+
+.ci-dest-label {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 4px;
+}
+
+.ci-dest {
+    font-size: clamp(22px, 3vw, 36px);
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.85);
+    text-align: center;
+}
+
+.ci-status-badge {
+    padding: 10px 32px;
+    border-radius: 50px;
+    font-size: 20px;
+    font-weight: 800;
+}
+
+.s-checkin   { background: #1A237E; color: #C5CAE9; }
+.s-boarding  { background: #BF360C; color: #FFCCBC; }
+.s-gateopen  { background: #0D47A1; color: #BBDEFB; }
+.s-delayed   { background: #F57F17; color: #FFF8E1; }
+.s-cancelled { background: #B71C1C; color: #FFCDD2; }
+.s-landed    { background: #1B5E20; color: #C8E6C9; }
+.s-default   { background: #263238; color: #CFD8DC; }
+
+/* ===== FOOTER ===== */
+.ci-footer {
+    height: 72px;
+    background: #0d1b5e;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32px;
+    flex-shrink: 0;
+    border-top: 2px solid #1e35a0;
+}
+
+.ci-airport {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.ci-airport-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 800;
+    text-align: center;
+    line-height: 1.2;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.ci-airport-icon img { width: 100%; height: 100%; object-fit: cover; }
+.ci-airport-name { font-size: 14px; font-weight: 700; }
+.ci-airport-en   { font-size: 10px; color: rgba(255, 255, 255, 0.55); }
+
+.ci-time {
+    font-size: 18px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* =============================================
+   PORTRAIT 9:16  — data-orient="v"
+   ============================================= */
+.ci-container[data-orient="v"] .ci-main {
+    padding: 30px 28px 16px;
+    gap: 24px;
+}
+
+.ci-container[data-orient="v"] .ci-title {
+    font-size: clamp(22px, 5vw, 38px);
+}
+
+.ci-container[data-orient="v"] .ci-card {
+    width: 90%;
+    padding: 24px 28px;
+    min-height: 100px;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.ci-container[data-orient="v"] .ci-plane-icon {
+    width: 48px;
+    height: 48px;
+}
+
+.ci-container[data-orient="v"] .ci-card-text {
+    font-size: clamp(22px, 5vw, 38px);
+    text-align: center;
+}
+
+.ci-container[data-orient="v"] .ci-flight-card {
+    width: 90%;
+    padding: 24px 28px;
+}
+
+.ci-container[data-orient="v"] .ci-flight-num {
+    font-size: clamp(32px, 10vw, 60px);
+}
+
+.ci-container[data-orient="v"] .ci-dest {
+    font-size: clamp(18px, 5vw, 30px);
+}
+
+.ci-container[data-orient="v"] .ci-footer {
+    height: auto;
+    min-height: 80px;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 4px;
+    padding: 12px 24px;
+}
+
+.ci-container[data-orient="v"] .ci-time {
+    font-size: 15px;
+}

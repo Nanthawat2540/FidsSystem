@@ -1,0 +1,177 @@
+@model IEnumerable<FidsSystem.Models.Advertisement>
+@{ ViewData["Title"] = "Ads &amp; PA List"; }
+
+@{
+    var months = new[] { "January","February","March","April","May","June","July","August","September","October","November","December" };
+    int curMonth = (int)(ViewBag.Month ?? DateTime.Now.Month);
+    int curYear  = (int)(ViewBag.Year  ?? DateTime.Now.Year);
+    int prevMonth = curMonth == 1 ? 12 : curMonth - 1;
+    int prevYear  = curMonth == 1 ? curYear - 1 : curYear;
+    int nextMonth = curMonth == 12 ? 1 : curMonth + 1;
+    int nextYear  = curMonth == 12 ? curYear + 1 : curYear;
+}
+
+@section TopbarActions {
+    <button class="btn-add" onclick="document.getElementById('addAdModal').classList.add('show')">
+        <i class="bi bi-plus-lg"></i> Add ADS
+    </button>
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert-success-inline">
+        <i class="bi bi-check-circle-fill"></i>@TempData["Success"]
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert-error-inline">
+        <i class="bi bi-x-circle-fill"></i>@TempData["Error"]
+    </div>
+}
+
+<div class="card">
+    <form method="get" class="filter-bar" style="flex-wrap:wrap; gap:12px;">
+        <div class="month-nav">
+            <a href="?month=@prevMonth&year=@prevYear" class="month-nav-btn"><i class="bi bi-chevron-left"></i></a>
+            <span class="month-nav-label">@months[curMonth-1], @curYear</span>
+            <a href="?month=@nextMonth&year=@nextYear" class="month-nav-btn"><i class="bi bi-chevron-right"></i></a>
+        </div>
+        <input type="hidden" name="month" value="@curMonth" />
+        <input type="hidden" name="year" value="@curYear" />
+        <span style="color:#e4e6ef;">|</span>
+        <div class="filter-input-wrap" style="min-width:200px;">
+            <i class="bi bi-search"></i>
+            <input type="text" name="search" class="filter-input" placeholder="Search Name" value="@ViewBag.Search" />
+        </div>
+        <select name="fileType" class="filter-select" style="min-width:140px;">
+            <option value="">File Type</option>
+            <option value="Video">Video</option>
+            <option value="Image">Image</option>
+        </select>
+        <button type="submit" class="btn-search"><i class="bi bi-search me-1"></i>Search</button>
+        <a asp-action="Index" class="btn-clear"><i class="bi bi-x me-1"></i>Clear</a>
+    </form>
+
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th style="width:30%;">Title</th>
+                    <th style="width:10%;">Type</th>
+                    <th style="width:14%;">Preview</th>
+                    <th style="width:12%;">Duration</th>
+                    <th style="width:10%;">Size (MB)</th>
+                    <th style="width:14%;">Upload Date</th>
+                    <th style="width:10%; text-align:right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td class="fw-600">@item.Title</td>
+                        <td>
+                            <span class="badge-role @(item.FileType=="Video" ? "badge-admin" : "badge-staff")" style="font-size:0.75rem;">
+                                @item.FileType
+                            </span>
+                        </td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(item.FilePath))
+                            {
+                                if (item.FileType == "Video")
+                                {
+                                    <video src="@item.FilePath" style="width:80px; height:50px; border-radius:6px; object-fit:cover;" muted preload="none"></video>
+                                }
+                                else
+                                {
+                                    <img src="@item.FilePath" style="width:80px; height:50px; border-radius:6px; object-fit:cover;" />
+                                }
+                            }
+                            else
+                            {
+                                <div style="width:80px; height:50px; border-radius:6px; background:linear-gradient(135deg,#1565c0,#0d47a1); display:flex; align-items:center; justify-content:center;">
+                                    <i class="bi @(item.FileType=="Video" ? "bi-play-circle-fill" : "bi-image")" style="color:#fff; font-size:1.4rem;"></i>
+                                </div>
+                            }
+                        </td>
+                        <td style="color:#7e8299;">@(item.Duration.HasValue ? $"{item.Duration}s" : "-")</td>
+                        <td style="color:#7e8299;">@(item.FileSizeMB.HasValue ? item.FileSizeMB.Value.ToString("0.0") : "-")</td>
+                        <td style="color:#7e8299;">@item.UploadDate.ToString("dd/MM/yyyy")</td>
+                        <td class="text-end">
+                            <form asp-action="DeleteAd" asp-route-id="@item.Id" method="post" class="d-inline" id="del-ad-@item.Id">
+                                <button type="button" class="btn-delete"
+                                        onclick="confirmDelete('del-ad-@item.Id','Delete &quot;@item.Title&quot;?')">
+                                    <i class="bi bi-trash-fill"></i> Delete
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="7">
+                            <div class="empty-state">
+                                <i class="bi bi-megaphone"></i>
+                                <p>No ads found for @months[curMonth-1] @curYear.</p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (Model.Any())
+    {
+        <div class="pagination-bar">
+            <button class="page-btn"><i class="bi bi-chevron-left" style="font-size:.75rem;"></i></button>
+            <button class="page-btn active">1</button>
+            <button class="page-btn"><i class="bi bi-chevron-right" style="font-size:.75rem;"></i></button>
+        </div>
+    }
+</div>
+
+<!-- Add ADS Modal -->
+<div id="addAdModal" class="modal-overlay" onclick="if(event.target===this)this.classList.remove('show')">
+    <div class="modal-box">
+        <div class="modal-title">
+            <i class="bi bi-megaphone-fill"></i>Add Advertisement
+        </div>
+        <form asp-action="CreateAd" method="post" enctype="multipart/form-data">
+            <div class="mb-3">
+                <label class="form-label-fids">Title <span class="required-star">*</span></label>
+                <input type="text" name="Title" class="form-control-fids" placeholder="e.g. Summer Promo" required />
+            </div>
+            <div class="mb-3">
+                <label class="form-label-fids">Duration (seconds)</label>
+                <input type="number" name="Duration" class="form-control-fids" placeholder="e.g. 30" min="0" />
+            </div>
+            <div class="mb-4">
+                <label class="form-label-fids">Upload File <small style="color:#7e8299;">(mp4, webm, mov, jpg, png, gif, webp — max 50 MB)</small></label>
+                <input type="file" name="file" accept="video/*,image/*" class="form-control-fids"
+                       onchange="previewAd(this)" />
+                <div id="adPreview" style="margin-top:10px;"></div>
+            </div>
+            <div class="d-flex justify-content-end gap-3">
+                <button type="button" class="btn-cancel" onclick="document.getElementById('addAdModal').classList.remove('show')">Cancel</button>
+                <button type="submit" class="btn-save"><i class="bi bi-upload me-1"></i>Upload &amp; Add</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+function previewAd(input) {
+    const preview = document.getElementById('adPreview');
+    const file = input.files[0];
+    if (!file) { preview.innerHTML = ''; return; }
+    const url = URL.createObjectURL(file);
+    const isVideo = file.type.startsWith('video/');
+    preview.innerHTML = isVideo
+        ? `<video src="${url}" style="max-width:100%; max-height:120px; border-radius:6px;" controls muted></video>`
+        : `<img src="${url}" style="max-width:100%; max-height:120px; border-radius:6px; object-fit:contain;" />`;
+}
+</script>
+}

@@ -1,0 +1,181 @@
+@model FidsSystem.Models.TemplateItem
+@{ ViewData["Title"] = "Template Setting"; bool isPortrait = Model.Ratio == "9:16"; }
+
+@section TopbarActions {
+    <button type="submit" form="saveForm" class="btn-save"><i class="bi bi-check-lg me-1"></i>Save</button>
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/assets/css/template-edit.css" asp-append-version="true" />
+    @if (isPortrait) {
+        <link rel="stylesheet" href="~/assets/css/template-edit-portrait.css" asp-append-version="true" />
+    } else {
+        <link rel="stylesheet" href="~/assets/css/template-edit-landscape.css" asp-append-version="true" />
+    }
+}
+
+<!-- Breadcrumb info bar -->
+<div class="edit-info-bar">
+    <a asp-action="Index" class="btn-cancel"><i class="bi bi-chevron-left me-1"></i>Back</a>
+    <div class="edit-meta">
+        <span class="meta-item"><span class="meta-key">Template</span><span class="meta-val">@Model.Name</span></span>
+        <span class="meta-sep">•</span>
+        <span class="meta-item"><span class="meta-key">Device</span><span class="meta-val">@Model.DeviceType</span></span>
+        <span class="meta-sep">•</span>
+        <span class="meta-item">
+            <span class="meta-val ratio-pill">@Model.Ratio</span>
+        </span>
+    </div>
+</div>
+
+<form id="saveForm" method="post" asp-action="Edit" asp-route-id="@Model.Id">
+    <input type="hidden" name="Id"         value="@Model.Id" />
+    <input type="hidden" name="Name"       value="@Model.Name" />
+    <input type="hidden" name="DeviceType" value="@Model.DeviceType" />
+    <input type="hidden" name="Ratio"      value="@Model.Ratio" />
+
+    <div class="canvas-editor">
+
+        <!-- ===== LEFT: Canvas Preview ===== -->
+        <div class="canvas-preview-wrap">
+            <div class="canvas-screen-bg @(isPortrait ? "portrait" : "landscape")">
+                <canvas id="editCanvas"></canvas>
+            </div>
+            <div class="canvas-preview-footer">
+                <span class="cpf-type">@Model.DeviceType</span>
+                <span class="cpf-ratio">@Model.Ratio</span>
+            </div>
+        </div>
+
+        <!-- ===== RIGHT: Config Panel ===== -->
+        <div class="config-panel">
+            <h6>Attributes</h6>
+            <select class="config-select" id="attrSelect" onchange="renderConfig(this.value)">
+                @if (Model.DeviceType == "Baggage Claim") {
+                    <option>Airline's Logo Configuration</option>
+                    <option>Background Configuration</option>
+                    <option>Flight Number Configuration</option>
+                    <option>Origin City Configuration</option>
+                    <option>Status Configuration</option>
+                    <option>Footer Configuration</option>
+                } else if (Model.DeviceType == "Check-in") {
+                    <option>Header Text Configuration</option>
+                    <option>Card Configuration</option>
+                    <option>Status Configuration</option>
+                    <option>Footer Configuration</option>
+                } else if (Model.DeviceType == "Baggage Claim Information") {
+                    <option>Belt Number Configuration</option>
+                    <option>Flight Row Configuration</option>
+                    <option>Status Configuration</option>
+                    <option>Footer Configuration</option>
+                } else {
+                    <option>Header @Model.DeviceType</option>
+                    <option>Column Header Configuration</option>
+                    <option>Row Configuration</option>
+                    <option>Status Badge Configuration</option>
+                    <option>Footer Configuration</option>
+                }
+            </select>
+
+            <h6 style="margin-top:20px;">Overall Configuration</h6>
+            <div style="margin-bottom:16px;">
+                <span class="config-label">Font</span>
+                <select class="config-select" name="font">
+                    <option>Noto Sans Thai</option>
+                    <option>Phetsarath OT</option>
+                    <option>Sarabun</option>
+                </select>
+            </div>
+
+            <div id="configDetails"></div>
+        </div>
+
+    </div>
+</form>
+
+@section Scripts {
+<script src="~/assets/js/template-draw.js" asp-append-version="true"></script>
+@if (Model.DeviceType == "Baggage Claim") {
+    <script src="~/assets/js/template-draw-baggage-claim.js" asp-append-version="true"></script>
+} else if (Model.DeviceType == "Baggage Claim Information") {
+    <script src="~/assets/js/template-draw-baggage-info.js" asp-append-version="true"></script>
+} else if (Model.DeviceType == "Check-in") {
+    <script src="~/assets/js/template-draw-checkin.js" asp-append-version="true"></script>
+} else {
+    <script src="~/assets/js/template-draw-board.js" asp-append-version="true"></script>
+}
+<script>
+// Init canvas with model data
+(function () {
+    const TYPE = '@Html.Raw(Model.DeviceType)';
+    const IS_P = '@Model.Ratio' === '9:16';
+
+    function paintCanvas() {
+        const canvas = document.getElementById('editCanvas');
+        if (!canvas || typeof DRAWERS === 'undefined') return;
+
+        // Fixed canvas sizes — never change with viewport
+        const cw = IS_P ? 360 : 750;
+        const ch = IS_P ? 600 : 420;
+
+        canvas.width  = cw;
+        canvas.height = ch;
+        canvas.style.width  = cw + 'px';
+        canvas.style.height = ch + 'px';
+
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, cw, ch);
+        if (DRAWERS[TYPE]) DRAWERS[TYPE](ctx, cw, ch);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => paintCanvas());
+})();
+
+// Config panel renderer
+function renderConfig(attr) {
+    const panel = document.getElementById('configDetails');
+    if (attr.includes('Logo')) {
+        panel.innerHTML = `
+            <span class="config-label">Airline's Logo</span>
+            <div class="config-row">
+                <div><span class="config-label">Position X (%)</span><input class="config-input" value="9"></div>
+                <div><span class="config-label">Position Y (%)</span><input class="config-input" value="0"></div>
+            </div>
+            <div><span class="config-label">Logo size (%)</span><input class="config-input" value="28"></div>`;
+    } else if (attr.includes('Background') || attr.includes('Header')) {
+        panel.innerHTML = `
+            <span class="config-label">${attr}</span>
+            <div><span class="config-label">Background color</span>
+                <input type="color" class="color-swatch" value="#0d1b5e" style="padding:2px; cursor:pointer;"></div>
+            <div><span class="config-label">Text color</span>
+                <input type="color" class="color-swatch" value="#ffffff" style="padding:2px; cursor:pointer;"></div>`;
+    } else if (attr.includes('Text')) {
+        panel.innerHTML = `
+            <span class="config-label">Text Configuration</span>
+            <div><span class="config-label">Text</span><input class="config-input" value="เคาน์เตอร์เช็คอินทุกสายการบิน"></div>
+            <div class="config-row" style="margin-top:12px;">
+                <div><span class="config-label">Position X (%)</span><input class="config-input" value="17.78"></div>
+                <div><span class="config-label">Position Y (%)</span><input class="config-input" value="15.19"></div>
+            </div>
+            <div class="config-row">
+                <div><span class="config-label">Font size (%)</span><input class="config-input" value="5"></div>
+                <div><span class="config-label">Font weight</span>
+                    <select class="config-select" style="margin-bottom:0;"><option>Extra Bold</option><option>Bold</option><option>Regular</option></select>
+                </div>
+            </div>
+            <div><span class="config-label">Font color</span><input type="color" class="color-swatch" value="#ffffff"></div>`;
+    } else {
+        panel.innerHTML = `
+            <span class="config-label">${attr}</span>
+            <div><span class="config-label">Background color</span>
+                <input type="color" class="color-swatch" value="#1565c0" style="padding:2px;"></div>
+            <div><span class="config-label">Text color</span>
+                <input type="color" class="color-swatch" value="#ffffff" style="padding:2px;"></div>`;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    renderConfig(document.getElementById('attrSelect').value);
+});
+</script>
+}

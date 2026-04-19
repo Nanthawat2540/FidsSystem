@@ -1,0 +1,123 @@
+@model List<FidsSystem.Models.AirlineLogo>
+@{ ViewData["Title"] = "Logo Management"; }
+
+@section TopbarActions {
+    <button class="btn-add" onclick="document.getElementById('addLogoModal').classList.add('show')">
+        <i class="bi bi-plus-lg"></i> Add Logo
+    </button>
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert-success-inline">
+        <i class="bi bi-check-circle-fill"></i>@TempData["Success"]
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert-error-inline">
+        <i class="bi bi-x-circle-fill"></i>@TempData["Error"]
+    </div>
+}
+
+<div class="card">
+    <form method="get" class="filter-bar">
+        <div class="filter-input-wrap" style="max-width:320px;">
+            <i class="bi bi-search"></i>
+            <input type="text" name="search" class="filter-input" placeholder="Search Airline" value="@ViewBag.Search" />
+        </div>
+        <button type="submit" class="btn-search"><i class="bi bi-search me-1"></i>Search</button>
+        <a asp-action="Logo" class="btn-clear"><i class="bi bi-x me-1"></i>Clear</a>
+    </form>
+
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th style="width:18%;">Image</th>
+                    <th style="width:20%;">Background Color</th>
+                    <th style="width:30%;">Airline</th>
+                    <th style="width:12%;">IATA Code</th>
+                    <th style="width:20%; text-align:right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            <div style="width:80px; height:40px; border-radius:6px; background:@(item.BackgroundColor ?? "#ebedf2"); display:flex; align-items:center; justify-content:center; padding:4px; border:1px solid #ebedf2;">
+                                <span style="font-size:0.75rem; font-weight:800; color:@(item.BackgroundColor=="#FFFFFF"?"#333":"#fff");">@item.IATACode</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="color-box" style="background:@(item.BackgroundColor ?? "#FFFFFF");"></div>
+                        </td>
+                        <td>@item.AirlineName</td>
+                        <td class="fw-600">@item.IATACode</td>
+                        <td class="text-end">
+                            <a href="#" class="btn-edit">
+                                <i class="bi bi-pencil-fill"></i> Edit
+                            </a>
+                            <form asp-action="DeleteLogo" asp-route-id="@item.Id" method="post" class="d-inline" id="del-logo-@item.Id">
+                                <button type="button" class="btn-delete"
+                                        onclick="confirmDelete('del-logo-@item.Id','Delete logo &quot;@item.AirlineName&quot;?')">
+                                    <i class="bi bi-trash-fill"></i> Delete
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="5">
+                            <div class="empty-state">
+                                <i class="bi bi-images"></i>
+                                <p>No airline logos found.</p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (Model.Any())
+    {
+        <div class="pagination-bar">
+            <button class="page-btn"><i class="bi bi-chevron-left" style="font-size:.75rem;"></i></button>
+            <button class="page-btn active">1</button>
+            <button class="page-btn"><i class="bi bi-chevron-right" style="font-size:.75rem;"></i></button>
+            <select class="page-btn" style="width:auto;padding:0 10px;font-size:.85rem;color:#7e8299;">
+                <option>20 / page</option><option>50 / page</option>
+            </select>
+        </div>
+    }
+</div>
+
+<!-- Add Logo Modal -->
+<div id="addLogoModal" class="modal-overlay" onclick="if(event.target===this)this.classList.remove('show')">
+    <div class="modal-box">
+        <div class="modal-title">
+            <i class="bi bi-images"></i>Add Logo
+        </div>
+        <form asp-action="CreateLogo" method="post">
+            <div class="mb-3">
+                <label class="form-label-fids">Airline Name <span class="required-star">*</span></label>
+                <input type="text" name="AirlineName" class="form-control-fids" placeholder="e.g. Thai Airways" required />
+            </div>
+            <div class="mb-3">
+                <label class="form-label-fids">IATA Code <span class="required-star">*</span></label>
+                <input type="text" name="IATACode" class="form-control-fids" placeholder="e.g. TG" maxlength="10" required />
+            </div>
+            <div class="mb-4">
+                <label class="form-label-fids">Background Color</label>
+                <input type="color" name="BackgroundColor" value="#FFFFFF" style="width:60px; height:36px; border:1px solid #e4e6ef; border-radius:6px; cursor:pointer; padding:2px;" />
+            </div>
+            <div class="d-flex justify-content-end gap-3">
+                <button type="button" class="btn-cancel" onclick="document.getElementById('addLogoModal').classList.remove('show')">Cancel</button>
+                <button type="submit" class="btn-save"><i class="bi bi-plus-lg me-1"></i>Add</button>
+            </div>
+        </form>
+    </div>
+</div>

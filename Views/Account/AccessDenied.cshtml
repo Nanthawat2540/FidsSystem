@@ -1,0 +1,34 @@
+@{ Layout = null; }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Access Denied — FIDS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Inter',sans-serif; background:#0d0f1e; color:#e4e6ef;
+               display:flex; align-items:center; justify-content:center; height:100vh; }
+        .box { text-align:center; padding:48px 40px; background:#111535;
+               border:1px solid #1e2235; border-radius:20px; max-width:420px; }
+        .icon { font-size:3.5rem; margin-bottom:16px; }
+        h1 { font-size:1.6rem; font-weight:700; margin-bottom:8px; }
+        p { color:#7e8299; font-size:.95rem; margin-bottom:24px; line-height:1.6; }
+        .role-badge { display:inline-block; padding:4px 14px; background:#1e2235;
+                      border-radius:20px; font-size:.8rem; color:#b5b5c3; margin-bottom:24px; }
+        a { display:inline-block; padding:10px 24px; background:#1A6BFA; color:#fff;
+            border-radius:8px; text-decoration:none; font-weight:600; font-size:.9rem; }
+        a:hover { background:#1558d6; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <div class="icon">🔒</div>
+        <h1>Access Denied</h1>
+        <p>You don't have permission to access this page.</p>
+        <div class="role-badge">Your role: @ViewBag.Role</div>
+        <br />
+        <a href="/Flight">← Back to Flights</a>
+    </div>
+</body>
+</html>

@@ -1,0 +1,171 @@
+@model List<FidsSystem.Models.DeviceItem>
+@{ ViewData["Title"] = "Device"; }
+
+@section TopbarActions {
+    <button class="btn-add" onclick="document.getElementById('addDeviceModal').classList.add('show')">
+        <i class="bi bi-plus-lg"></i> Device
+    </button>
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert-success-inline">
+        <i class="bi bi-check-circle-fill"></i>@TempData["Success"]
+    </div>
+}
+
+<div class="card">
+    <form method="get" class="filter-bar">
+        <select name="zone" class="filter-select" style="min-width:110px;">
+            <option value="">Zone</option>
+            @if (ViewBag.Zones != null)
+            {
+                foreach (var z in (IEnumerable<FidsSystem.Models.Zone>)ViewBag.Zones)
+                {
+                    <option value="@z.Id">@z.ZoneName</option>
+                }
+            }
+        </select>
+        <select name="deviceType" class="filter-select">
+            <option value="">Device Type</option>
+            @foreach (var t in FidsSystem.Models.DeviceTypes.All)
+            {
+                <option value="@t" selected="@(ViewBag.DeviceType==t?"selected":null)">@t</option>
+            }
+        </select>
+        <select name="status" class="filter-select" style="min-width:110px;">
+            <option value="">Status</option>
+            <option value="match">Match</option>
+        </select>
+        <div class="filter-input-wrap">
+            <i class="bi bi-search"></i>
+            <input type="text" name="search" class="filter-input"
+                   placeholder="Search Device name or IP..." value="@ViewBag.Search" />
+        </div>
+        <button type="submit" class="btn-search"><i class="bi bi-search me-1"></i>Search</button>
+        <a asp-action="Index" class="btn-clear"><i class="bi bi-x me-1"></i>Clear</a>
+    </form>
+
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th style="width:9%;">Device ID</th>
+                    <th style="width:7%;">Zone</th>
+                    <th style="width:14%;">Device Name</th>
+                    <th style="width:20%;">Device Type</th>
+                    <th style="width:16%;">IP Address</th>
+                    <th style="width:16%;">Status</th>
+                    <th style="width:18%; text-align:right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td class="fw-600">@item.Id</td>
+                        <td>@item.ZoneName</td>
+                        <td class="fw-600" style="color:var(--blue);">@item.DeviceName</td>
+                        <td style="color:#7e8299;">@item.DeviceType</td>
+                        <td style="color:#7e8299; font-family:monospace;">@item.IPAddress</td>
+                        <td>
+                            <button class="btn-preview" style="padding:6px 14px; border:1.5px solid var(--blue-mid); color:var(--blue); border-radius:8px; background:var(--blue-light); font-size:0.82rem; font-weight:600; display:inline-flex; align-items:center; gap:5px;">
+                                <i class="bi bi-display"></i> Match
+                            </button>
+                        </td>
+                        <td class="text-end">
+                            <a href="#" class="btn-edit">
+                                <i class="bi bi-pencil-fill"></i> Edit
+                            </a>
+                            <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline" id="del-dev-@item.Id">
+                                <button type="button" class="btn-delete"
+                                        onclick="confirmDelete('del-dev-@item.Id','Delete device &quot;@item.DeviceName&quot;?')">
+                                    <i class="bi bi-trash-fill"></i> Delete
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="7">
+                            <div class="empty-state">
+                                <i class="bi bi-laptop"></i>
+                                <p>No devices found.</p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (Model.Any())
+    {
+        <div class="pagination-bar">
+            <button class="page-btn"><i class="bi bi-chevron-left" style="font-size:.75rem;"></i></button>
+            <button class="page-btn active">1</button>
+            <button class="page-btn"><i class="bi bi-chevron-right" style="font-size:.75rem;"></i></button>
+            <select class="page-btn" style="width:auto;padding:0 10px;font-size:.85rem;color:#7e8299;">
+                <option>20 / page</option><option>50 / page</option>
+            </select>
+        </div>
+    }
+</div>
+
+<!-- Add Device Modal -->
+<div id="addDeviceModal" class="modal-overlay" onclick="if(event.target===this)this.classList.remove('show')">
+    <div class="modal-box">
+        <div class="modal-title">
+            <i class="bi bi-laptop"></i>Add Device
+        </div>
+        <form asp-action="Create" method="post">
+            <div class="mb-3">
+                <label class="form-label-fids">Device Name <span class="required-star">*</span></label>
+                <input type="text" name="DeviceName" class="form-control-fids" placeholder="Input Device Name" maxlength="50" required />
+            </div>
+            <div class="mb-3">
+                <label class="form-label-fids">Device Type <span class="required-star">*</span></label>
+                <select name="DeviceType" class="filter-select" style="width:100%; min-width:unset;" required>
+                    <option value="">Select Device Type</option>
+                    @foreach (var t in FidsSystem.Models.DeviceTypes.All)
+                    {
+                        <option value="@t">@t</option>
+                    }
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label-fids">Ratio <span class="required-star">*</span></label>
+                <select name="Ratio" class="filter-select" style="width:100%; min-width:unset;" required>
+                    <option value="">Select Ratio</option>
+                    <option value="16:9">16:9</option>
+                    <option value="9:16">9:16</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label-fids">IP Address <span class="required-star">*</span></label>
+                <div class="input-icon-wrap">
+                    <i class="bi bi-ethernet input-icon" style="color:#bdbdd8;"></i>
+                    <input type="text" name="IPAddress" class="form-control-fids" placeholder="e.g. 192.168.1.100" required />
+                </div>
+            </div>
+            <div class="mb-4">
+                <label class="form-label-fids">Zone <span class="required-star">*</span></label>
+                <select name="ZoneId" class="filter-select" style="width:100%; min-width:unset;" required>
+                    <option value="">Select Zone</option>
+                    @if (ViewBag.Zones != null)
+                    {
+                        foreach (var z in (IEnumerable<FidsSystem.Models.Zone>)ViewBag.Zones)
+                        {
+                            <option value="@z.Id">@z.ZoneName</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="d-flex justify-content-end gap-3">
+                <button type="button" class="btn-cancel" onclick="document.getElementById('addDeviceModal').classList.remove('show')">Cancel</button>
+                <button type="submit" class="btn-save"><i class="bi bi-plus-lg me-1"></i>Add</button>
+            </div>
+        </form>
+    </div>
+</div>

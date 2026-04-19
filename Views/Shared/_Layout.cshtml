@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] — FIDS Backoffice</title>
+
+    <!-- Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+    <!-- Plugins -->
+    <link rel="stylesheet" href="~/plugins/bootstrap/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/plugins/bootstrap-icons/css/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/plugins/sweetalert2/css/sweetalert2.min.css" />
+
+    <!-- Font Awesome 6 Free -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- Flaticon CDN (Uicons by Flaticon) -->
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/2.6.0/uicons-regular-rounded/css/uicons-regular-rounded.css" />
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/2.6.0/uicons-solid-rounded/css/uicons-solid-rounded.css" />
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/2.6.0/uicons-brands/css/uicons-brands.css" />
+
+    <!-- App Style -->
+    <link rel="stylesheet" href="~/assets/css/style.css" />
+
+    @RenderSection("Styles", required: false)
+</head>
+<body>
+    @{
+        var ctrl   = ViewContext.RouteData.Values["controller"]?.ToString();
+        var action = ViewContext.RouteData.Values["action"]?.ToString();
+        bool adsOpen = ctrl == "Ads";
+        bool sysOpen = ctrl == "SystemManagement";
+    }
+    @inject FidsSystem.Services.IAlertService AlertSvc
+    @inject FidsSystem.Services.IPermissionService PermSvc
+    @{
+        int unread = 0; try { unread = await AlertSvc.GetUnreadCountAsync(); } catch { }
+        var _uid  = int.TryParse(Context.Session.GetString("UserId"), out var _p) ? _p : 0;
+        var _role = Context.Session.GetString("Role") ?? "";
+        var _perms = _uid > 0 ? await PermSvc.GetUserPermissionsAsync(_uid, _role) : new System.Collections.Generic.HashSet<string>();
+        bool CanSee(string k) => _perms.Contains(k);
+    }
+
+    <!-- ========== Sidebar ========== -->
+    <aside class="sidebar" id="sidebar">
+
+        <!-- Brand -->
+        <div class="sidebar-brand">
+            <div class="sidebar-logo">
+                <i class="bi bi-airplane-fill"></i>
+            </div>
+            <div class="sidebar-brand-info sidebar-label">
+                <span class="sidebar-brand-name">FIDS</span>
+                <span class="sidebar-brand-sub">Backoffice</span>
+            </div>
+            <button class="sidebar-toggle" onclick="toggleSidebar()" title="Collapse">
+                <i class="bi bi-layout-sidebar-reverse" id="toggleIcon"></i>
+            </button>
+        </div>
+
+        <!-- User -->
+        <div class="sidebar-user-block">
+            <div class="sidebar-avatar">
+                @{ var u = Context.Session.GetString("Username") ?? "U"; }
+                @u.Substring(0,1).ToUpper()
+            </div>
+            <div class="sidebar-user-info sidebar-label">
+                <span class="sidebar-user-name">@u</span>
+                <span class="sidebar-user-role">Administrator</span>
+            </div>
+            <a class="sidebar-logout sidebar-label" asp-controller="Account" asp-action="Logout" title="Logout">
+                <i class="bi bi-box-arrow-right"></i>
+            </a>
+        </div>
+
+        <div class="sidebar-divider"></div>
+
+        <!-- Content Management -->
+        <div class="sidebar-section">Content</div>
+
+        @if (CanSee(FidsSystem.Models.PermKeys.MenuTemplate))
+        {
+        <a class="nav-link @(ctrl == "Template" ? "active" : "")"
+           asp-controller="Template" asp-action="Index">
+            <span class="nav-icon"><i class="bi bi-grid-1x2"></i></span>
+            <span class="sidebar-label">Template</span>
+        </a>
+        }
+        @if (CanSee(FidsSystem.Models.PermKeys.MenuDisplay))
+        {
+        <a class="nav-link @(ctrl == "DisplayManagement" ? "active" : "")"
+           asp-controller="DisplayManagement" asp-action="Index">
+            <span class="nav-icon"><i class="bi bi-display"></i></span>
+            <span class="sidebar-label">Display Management</span>
+        </a>
+        }
+        @if (CanSee(FidsSystem.Models.PermKeys.MenuFlight))
+        {
+        <a class="nav-link @(ctrl == "Flight" ? "active" : "")"
+           asp-controller="Flight" asp-action="Index">
+            <span class="nav-icon"><i class="bi bi-airplane"></i></span>
+            <span class="sidebar-label">Flight Management</span>
+        </a>
+        }
+        @if (CanSee(FidsSystem.Models.PermKeys.MenuReports))
+        {
+        <a class="nav-link @(ctrl == "Reports" ? "active" : "")"
+           asp-controller="Reports" asp-action="Index">
+            <span class="nav-icon"><i class="bi bi-bar-chart-line"></i></span>
+            <span class="sidebar-label">Reports</span>
+        </a>
+        }
+        @if (CanSee(FidsSystem.Models.PermKeys.MenuAlerts))
+        {
+        <a class="nav-link @(ctrl == "Alerts" ? "active" : "")"
+           asp-controller="Alerts" asp-action="Index">
+            <span class="nav-icon" style="position:relative;">
+                <i class="bi bi-bell"></i>
+                @if (unread > 0)
+                {
+                    <span style="position:absolute; top:-4px; right:-6px; background:#EF4444; color:#fff;
+                                 border-radius:50%; font-size:.6rem; width:16px; height:16px;
+                                 display:flex; align-items:center; justify-content:center; font-weight:700;">
+                        @(unread > 9 ? "9+" : unread.ToString())
+                    </span>
+                }
+            </span>
+            <span class="sidebar-label">Alerts @(unread > 0 ? $"({unread})" : "")</span>
+        </a>
+        }
+
+        <!-- ADS & PA -->
+        @if (CanSee(FidsSystem.Models.PermKeys.MenuAds))
+        {
+        <button class="nav-link nav-link-parent @(adsOpen ? "active open" : "")"
+                onclick="toggleMenu('adsMenu', this)">
+            <span class="nav-icon"><i class="bi bi-megaphone"></i></span>
+            <span class="sidebar-label">ADS &amp; PA</span>
+            <i class="bi bi-chevron-right nav-chevron sidebar-label"></i>
+        </button>
+        <div id="adsMenu" class="sidebar-submenu @(adsOpen ? "show" : "")">
+            <a class="nav-link nav-link-sub @(ctrl == "Ads" && action == "Index" ? "active" : "")"
+               asp-controller="Ads" asp-action="Index">
+                <span class="sub-dot"></span>Ads &amp; PA List
+            </a>
+            <a class="nav-link nav-link-sub @(ctrl == "Ads" && action == "Playlists" ? "active" : "")"
+               asp-controller="Ads" asp-action="Playlists">
+                <span class="sub-dot"></span>Playlists
+            </a>
+            <a class="nav-link nav-link-sub @(ctrl == "Ads" && action == "MatchDisplay" ? "active" : "")"
+               asp-controller="Ads" asp-action="MatchDisplay">
+                <span class="sub-dot"></span>Match Display
+            </a>
+        </div>
+        }
+
+        <div class="sidebar-divider"></div>
+
+        <!-- System Setting -->
+        <div class="sidebar-section">Settings</div>
+
+        @if (CanSee(FidsSystem.Models.PermKeys.MenuZone))
+        {
+        <a class="nav-link @(ctrl == "Zone" ? "active" : "")"
+           asp-controller="Zone" asp-action="Index">
+            <span class="nav-icon"><i class="bi bi-diagram-3"></i></span>
+            <span class="sidebar-label">Zone</span>
+        </a>
+        }
+        @if (CanSee(FidsSystem.Models.PermKeys.MenuDevice))
+        {
+        <a class="nav-link @(ctrl == "Device" ? "active" : "")"
+           asp-controller="Device" asp-action="Index">
+            <span class="nav-icon"><i class="bi bi-tv"></i></span>
+            <span class="sidebar-label">Device</span>
+        </a>
+        }
+        @if (CanSee(FidsSystem.Models.PermKeys.MenuAdmin))
+        {
+        <a class="nav-link @(ctrl == "AdminManagement" ? "active" : "")"
+           asp-controller="AdminManagement" asp-action="Index">
+            <span class="nav-icon"><i class="bi bi-people"></i></span>
+            <span class="sidebar-label">Admin Management</span>
+        </a>
+        }
+        @if (CanSee(FidsSystem.Models.PermKeys.MenuPermissions))
+        {
+        <a class="nav-link @(ctrl == "Permissions" ? "active" : "")"
+           asp-controller="Permissions" asp-action="Index">
+            <span class="nav-icon"><i class="bi bi-shield-lock"></i></span>
+            <span class="sidebar-label">Permissions</span>
+        </a>
+        }
+
+        <!-- System Management -->
+        @if (CanSee(FidsSystem.Models.PermKeys.MenuSystem))
+        {
+        <button class="nav-link nav-link-parent @(sysOpen ? "active open" : "")"
+                onclick="toggleMenu('sysMenu', this)">
+            <span class="nav-icon"><i class="bi bi-sliders"></i></span>
+            <span class="sidebar-label">System Management</span>
+            <i class="bi bi-chevron-right nav-chevron sidebar-label"></i>
+        </button>
+        <div id="sysMenu" class="sidebar-submenu @(sysOpen ? "show" : "")">
+            <a class="nav-link nav-link-sub @(ctrl == "SystemManagement" && action == "Logo" ? "active" : "")"
+               asp-controller="SystemManagement" asp-action="Logo">
+                <span class="sub-dot"></span>Logo Management
+            </a>
+            <a class="nav-link nav-link-sub @(ctrl == "SystemManagement" && action == "DisplaySettings" ? "active" : "")"
+               asp-controller="SystemManagement" asp-action="DisplaySettings">
+                <span class="sub-dot"></span>Display Settings
+            </a>
+            <a class="nav-link nav-link-sub @(ctrl == "SystemManagement" && action == "Language" ? "active" : "")"
+               asp-controller="SystemManagement" asp-action="Language">
+                <span class="sub-dot"></span>Language
+            </a>
+        </div>
+        }
+
+    </aside>
+
+    <!-- Mobile sidebar overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMobileSidebar()"></div>
+
+    <!-- ========== Topbar ========== -->
+    <header class="topbar" id="topbar">
+        <div style="display:flex; align-items:center; gap:0;">
+            <button class="topbar-hamburger" id="hamburgerBtn" onclick="toggleMobileSidebar()" title="Menu">
+                <i class="bi bi-list" id="hamburgerIcon"></i>
+            </button>
+            <h1 class="page-title">@ViewData["Title"]</h1>
+        </div>
+        <div class="topbar-actions">
+            @RenderSection("TopbarActions", required: false)
+        </div>
+    </header>
+
+    <!-- ========== Main Content ========== -->
+    <div class="main-content" id="mainContent">
+        <main>@RenderBody()</main>
+    </div>
+
+    <!-- JS -->
+    <script src="~/plugins/jquery/jquery.min.js"></script>
+    <script src="~/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="~/plugins/sweetalert2/js/sweetalert2.min.js"></script>
+    <script src="~/assets/js/main.js"></script>
+
+    <script>
+        function toggleMenu(menuId, btn) {
+            const menu = document.getElementById(menuId);
+            const isOpen = menu.classList.contains('show');
+            menu.classList.toggle('show');
+            btn.classList.toggle('open', !isOpen);
+        }
+        function toggleSidebar() {
+            const s = document.getElementById('sidebar');
+            const t = document.getElementById('topbar');
+            const m = document.getElementById('mainContent');
+            s.classList.toggle('collapsed');
+            t.classList.toggle('expanded');
+            m.classList.toggle('expanded');
+        }
+        function toggleMobileSidebar() {
+            const s = document.getElementById('sidebar');
+            const o = document.getElementById('sidebarOverlay');
+            const isOpen = s.classList.contains('mobile-open');
+            s.classList.toggle('mobile-open', !isOpen);
+            o.classList.toggle('show', !isOpen);
+            document.getElementById('hamburgerIcon').className = isOpen ? 'bi bi-list' : 'bi bi-x-lg';
+        }
+        function closeMobileSidebar() {
+            document.getElementById('sidebar').classList.remove('mobile-open');
+            document.getElementById('sidebarOverlay').classList.remove('show');
+            document.getElementById('hamburgerIcon').className = 'bi bi-list';
+        }
+        // Auto-close sidebar on nav link click (mobile)
+        document.addEventListener('DOMContentLoaded', function () {
+            if (window.innerWidth <= 900) {
+                document.querySelectorAll('.nav-link:not(.nav-link-parent)').forEach(function (el) {
+                    el.addEventListener('click', closeMobileSidebar);
+                });
+            }
+        });
+    </script>
+
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

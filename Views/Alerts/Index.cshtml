@@ -1,0 +1,94 @@
+@model IEnumerable<FidsSystem.Models.Alert>
+@{ ViewData["Title"] = "Alerts"; }
+
+@section TopbarActions {
+    @if (Model.Any(a => !a.IsAcknowledged))
+    {
+        <form asp-action="AcknowledgeAll" method="post" class="d-inline">
+            <button type="submit" class="btn-search">
+                <i class="bi bi-check-all me-1"></i>Acknowledge All
+            </button>
+        </form>
+    }
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert-success-inline">
+        <i class="bi bi-check-circle-fill"></i>@TempData["Success"]
+    </div>
+}
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th style="width:5%;">&nbsp;</th>
+                    <th style="width:12%;">Type</th>
+                    <th style="width:8%;">Severity</th>
+                    <th style="width:12%;">Flight</th>
+                    <th>Title</th>
+                    <th>Message</th>
+                    <th style="width:14%;">Time</th>
+                    <th style="width:10%;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var a in Model)
+                {
+                    var severityColor = a.Severity switch {
+                        FidsSystem.Models.AlertSeverity.Critical => "#EF4444",
+                        FidsSystem.Models.AlertSeverity.Warning  => "#F59E0B",
+                        _                                        => "#6366F1"
+                    };
+                    var typeIcon = a.Type switch {
+                        FidsSystem.Models.AlertType.FlightDelay     => "bi-clock-history",
+                        FidsSystem.Models.AlertType.GateChange      => "bi-door-open",
+                        FidsSystem.Models.AlertType.FlightCancelled => "bi-x-circle",
+                        FidsSystem.Models.AlertType.ScreenOffline   => "bi-display",
+                        _                                           => "bi-bell"
+                    };
+                    <tr style="opacity:@(a.IsAcknowledged ? "0.45" : "1")">
+                        <td>
+                            <i class="bi @typeIcon" style="color:@severityColor; font-size:1.1rem;"></i>
+                        </td>
+                        <td style="color:#b5b5c3; font-size:.8rem;">@a.Type</td>
+                        <td>
+                            <span style="color:@severityColor; font-size:.75rem; font-weight:700;">
+                                @a.Severity.ToString().ToUpper()
+                            </span>
+                        </td>
+                        <td style="font-weight:600;">@(a.FlightNumber ?? "-")</td>
+                        <td style="font-weight:500; color:#e4e6ef;">@a.Title</td>
+                        <td style="color:#7e8299; font-size:.85rem;">@a.Message</td>
+                        <td style="color:#7e8299; font-size:.8rem;">@a.CreatedAt.ToString("dd/MM HH:mm")</td>
+                        <td>
+                            @if (!a.IsAcknowledged)
+                            {
+                                <form asp-action="Acknowledge" asp-route-id="@a.Id" method="post" class="d-inline">
+                                    <button type="submit" class="btn-edit" style="font-size:.75rem;">
+                                        <i class="bi bi-check me-1"></i>Ack
+                                    </button>
+                                </form>
+                            }
+                            else
+                            {
+                                <span style="color:#10B981; font-size:.75rem;"><i class="bi bi-check-circle-fill me-1"></i>Acked</span>
+                            }
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="8">
+                        <div class="empty-state">
+                            <i class="bi bi-shield-check" style="color:#10B981;"></i>
+                            <p>No alerts. System is running normally.</p>
+                        </div>
+                    </td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

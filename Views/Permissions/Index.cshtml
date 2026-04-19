@@ -1,0 +1,353 @@
+@using FidsSystem.Models
+@{
+    ViewData["Title"] = "Permissions";
+    var users     = ViewBag.Users     as IEnumerable<AdminUser>  ?? [];
+    var overrides = ViewBag.Overrides as Dictionary<int, Dictionary<string, bool>> ?? [];
+    var keys      = ViewBag.Keys      as string[]  ?? [];
+    var defs      = ViewBag.Defs      as (string Group, string Label, string Icon, string[] Roles)[] ?? [];
+
+    // helper: effective enabled state for a user/key pair
+    bool Effective(AdminUser u, string key)
+    {
+        if (overrides.TryGetValue(u.Id, out var uPerms) && uPerms.TryGetValue(key, out var ov))
+            return ov;
+        return PermKeys.RoleDefault(key, u.Role);
+    }
+
+    bool HasOverride(AdminUser u, string key) =>
+        overrides.TryGetValue(u.Id, out var d) && d.ContainsKey(key);
+
+    string RoleColor(string role) => role switch {
+        Roles.Admin   => "#EF4444",
+        Roles.Staff   => "#1A6BFA",
+        Roles.Airline => "#10B981",
+        _             => "#b5b5c3"
+    };
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert-success-inline"><i class="bi bi-check-circle-fill"></i>@TempData["Success"]</div>
+}
+
+<!-- User tab row -->
+<div class="perm-user-tabs" id="userTabs">
+    @foreach (var u in users)
+    {
+        <button class="perm-user-tab" data-uid="@u.Id"
+                style="--role-color:@RoleColor(u.Role)"
+                onclick="selectUser(@u.Id, this)">
+            <div class="perm-tab-avatar">@u.Username.Substring(0,1).ToUpper()</div>
+            <div class="perm-tab-info">
+                <span class="perm-tab-name">@u.Username</span>
+                <span class="perm-tab-role">@u.Role</span>
+            </div>
+            @if (overrides.ContainsKey(u.Id) && overrides[u.Id].Count > 0)
+            {
+                <span class="perm-tab-badge" title="Has custom overrides">!</span>
+            }
+        </button>
+    }
+</div>
+
+<!-- Per-user permission panel -->
+@foreach (var u in users)
+{
+    var menuKeys    = keys.Where((k,i) => i < defs.Length && defs[i].Group == "Menu").ToList();
+    var featKeys    = keys.Where((k,i) => i < defs.Length && defs[i].Group == "Feature").ToList();
+    bool hasOverride = overrides.ContainsKey(u.Id) && overrides[u.Id].Count > 0;
+
+    <div id="perm-panel-@u.Id" class="perm-panel" style="display:none;">
+        <div class="card" style="margin-bottom:1.5rem;">
+            <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; padding:1.2rem 1.5rem; border-bottom:1px solid var(--border);">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div style="width:44px; height:44px; border-radius:50%; background:var(--card-bg);
+                                border:2px solid @RoleColor(u.Role); display:flex; align-items:center;
+                                justify-content:center; font-weight:700; color:@RoleColor(u.Role); font-size:1rem;">
+                        @u.Username.Substring(0,1).ToUpper()
+                    </div>
+                    <div>
+                        <div class="fw-600" style="font-size:1rem;">@u.Username</div>
+                        <span style="background:rgba(0,0,0,.2); border:1px solid @RoleColor(u.Role);
+                                     color:@RoleColor(u.Role); padding:2px 10px; border-radius:20px;
+                                     font-size:.72rem; font-weight:700;">@u.Role</span>
+                        @if (!string.IsNullOrEmpty(u.AirlineCode))
+                        {
+                            <span style="background:#0a2440; color:#06B6D4; padding:2px 8px;
+                                         border-radius:12px; font-size:.72rem; font-weight:600; margin-left:6px;">
+                                @u.AirlineCode
+                            </span>
+                        }
+                    </div>
+                </div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    @if (hasOverride)
+                    {
+                        <span style="background:rgba(251,191,36,.1); border:1px solid #FBBF24; color:#FBBF24;
+                                     padding:3px 10px; border-radius:12px; font-size:.75rem; font-weight:600;">
+                            <i class="bi bi-exclamation-triangle me-1"></i>Custom overrides active
+                        </span>
+                    }
+                    <form asp-action="Reset" method="post" class="d-inline"
+                          id="reset-@u.Id"
+                          onsubmit="return confirm('Reset @u.Username to role defaults?')">
+                        <input type="hidden" name="userId" value="@u.Id" />
+                        <button type="submit" class="btn-cancel" style="font-size:.8rem; padding:5px 14px;">
+                            <i class="bi bi-arrow-counterclockwise me-1"></i>Reset to Defaults
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Menu Permissions -->
+            <div style="padding:1.2rem 1.5rem 0;">
+                <div style="font-size:.7rem; font-weight:700; color:#7e8299; letter-spacing:.08em;
+                             text-transform:uppercase; margin-bottom:.8rem;">
+                    Menu Visibility
+                </div>
+                <div class="perm-grid">
+                    @for (int i = 0; i < keys.Length; i++)
+                    {
+                        if (i >= defs.Length || defs[i].Group != "Menu") continue;
+                        var key     = keys[i];
+                        var def     = defs[i];
+                        bool on     = Effective(u, key);
+                        bool isOvr  = HasOverride(u, key);
+                        <div class="perm-item @(isOvr ? "perm-overridden" : "")">
+                            <div class="perm-item-icon"><i class="bi @def.Icon"></i></div>
+                            <div class="perm-item-label">
+                                @def.Label
+                                @if (isOvr)
+                                {
+                                    <span class="perm-ovr-dot" title="Custom override"></span>
+                                }
+                            </div>
+                            <label class="perm-toggle">
+                                <input type="checkbox" @(on ? "checked" : "")
+                                       onchange="togglePerm(@u.Id, '@key', this.checked, this)" />
+                                <span class="perm-slider"></span>
+                            </label>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Feature Permissions -->
+            <div style="padding:1rem 1.5rem 1.5rem;">
+                <div style="font-size:.7rem; font-weight:700; color:#7e8299; letter-spacing:.08em;
+                             text-transform:uppercase; margin-bottom:.8rem;">
+                    Feature Access
+                </div>
+                <div class="perm-grid">
+                    @for (int i = 0; i < keys.Length; i++)
+                    {
+                        if (i >= defs.Length || defs[i].Group != "Feature") continue;
+                        var key     = keys[i];
+                        var def     = defs[i];
+                        bool on     = Effective(u, key);
+                        bool isOvr  = HasOverride(u, key);
+                        <div class="perm-item @(isOvr ? "perm-overridden" : "")">
+                            <div class="perm-item-icon"><i class="bi @def.Icon"></i></div>
+                            <div class="perm-item-label">
+                                @def.Label
+                                @if (isOvr)
+                                {
+                                    <span class="perm-ovr-dot" title="Custom override"></span>
+                                }
+                            </div>
+                            <label class="perm-toggle">
+                                <input type="checkbox" @(on ? "checked" : "")
+                                       onchange="togglePerm(@u.Id, '@key', this.checked, this)" />
+                                <span class="perm-slider"></span>
+                            </label>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<div id="perm-empty" style="text-align:center; padding:4rem 0; color:#7e8299;">
+    <i class="bi bi-person-check" style="font-size:2.5rem;"></i>
+    <p style="margin-top:1rem;">Select a user above to manage their permissions.</p>
+</div>
+
+@section Styles {
+<style>
+/* ── User tab strip ────────────────────────── */
+.perm-user-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 1.5rem;
+}
+.perm-user-tab {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: border-color .18s, box-shadow .18s;
+    position: relative;
+}
+.perm-user-tab:hover  { border-color: var(--role-color, #1A6BFA); }
+.perm-user-tab.active {
+    border-color: var(--role-color, #1A6BFA);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--role-color, #1A6BFA) 20%, transparent);
+}
+.perm-tab-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--card-bg);
+    border: 2px solid var(--role-color, #b5b5c3);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; color: var(--role-color, #b5b5c3); font-size: .8rem;
+}
+.perm-tab-info   { display:flex; flex-direction:column; line-height:1.3; }
+.perm-tab-name   { font-size:.85rem; font-weight:600; color:var(--text-primary); }
+.perm-tab-role   { font-size:.7rem;  color:var(--role-color, #b5b5c3); font-weight:600; }
+.perm-tab-badge  {
+    position:absolute; top:5px; right:5px;
+    width:14px; height:14px; border-radius:50%;
+    background:#FBBF24; color:#000; font-size:.55rem;
+    font-weight:800; display:flex; align-items:center; justify-content:center;
+}
+
+/* ── Grid ──────────────────────────────────── */
+.perm-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+    margin-bottom: 1rem;
+}
+.perm-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--sidebar-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    transition: border-color .15s;
+}
+.perm-item.perm-overridden { border-color: rgba(251,191,36,.4); }
+.perm-item-icon  { font-size:1rem; color:#7e8299; flex-shrink:0; }
+.perm-item-label {
+    flex: 1; font-size:.82rem; font-weight:500;
+    color: var(--text-primary); display:flex; align-items:center; gap:6px;
+}
+.perm-ovr-dot {
+    width:6px; height:6px; border-radius:50%;
+    background:#FBBF24; flex-shrink:0;
+}
+
+/* ── Toggle switch ─────────────────────────── */
+.perm-toggle { position:relative; display:inline-block; width:38px; height:22px; flex-shrink:0; }
+.perm-toggle input { opacity:0; width:0; height:0; }
+.perm-slider {
+    position: absolute; inset: 0;
+    background: rgba(255,255,255,.1);
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    cursor: pointer;
+    transition: .2s;
+}
+.perm-slider:before {
+    content: "";
+    position: absolute;
+    width: 14px; height: 14px;
+    left: 3px; bottom: 3px;
+    background: #7e8299;
+    border-radius: 50%;
+    transition: .2s;
+}
+.perm-toggle input:checked + .perm-slider             { background:#1A6BFA; border-color:#1A6BFA; }
+.perm-toggle input:checked + .perm-slider:before      { background:#fff; transform: translateX(16px); }
+.perm-toggle input:disabled + .perm-slider            { opacity:.45; cursor:not-allowed; }
+
+/* saving state */
+.perm-toggle.saving .perm-slider { opacity:.5; }
+</style>
+}
+
+@section Scripts {
+<script>
+let activeUid = null;
+
+function selectUser(uid, btn) {
+    // hide all panels
+    document.querySelectorAll('.perm-panel').forEach(p => p.style.display = 'none');
+    document.querySelectorAll('.perm-user-tab').forEach(b => b.classList.remove('active'));
+    document.getElementById('perm-empty').style.display = 'none';
+
+    if (activeUid === uid) {
+        activeUid = null;
+        document.getElementById('perm-empty').style.display = '';
+        return;
+    }
+    activeUid = uid;
+    btn.classList.add('active');
+    const panel = document.getElementById('perm-panel-' + uid);
+    if (panel) panel.style.display = '';
+}
+
+function togglePerm(userId, key, enabled, checkbox) {
+    const toggle = checkbox.closest('.perm-toggle');
+    toggle.classList.add('saving');
+    checkbox.disabled = true;
+
+    fetch('@Url.Action("Toggle", "Permissions")', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `userId=${userId}&key=${encodeURIComponent(key)}&enabled=${enabled}`
+    })
+    .then(r => r.json())
+    .then(data => {
+        toggle.classList.remove('saving');
+        checkbox.disabled = false;
+        if (!data.ok) { checkbox.checked = !enabled; showToast('Error saving permission', 'error'); return; }
+        // mark item as overridden
+        const item = checkbox.closest('.perm-item');
+        if (item) item.classList.add('perm-overridden');
+        // show override dot
+        const label = item?.querySelector('.perm-item-label');
+        if (label && !label.querySelector('.perm-ovr-dot')) {
+            const dot = document.createElement('span');
+            dot.className = 'perm-ovr-dot';
+            dot.title = 'Custom override';
+            label.appendChild(dot);
+        }
+        // mark tab badge
+        const tab = document.querySelector(`.perm-user-tab[data-uid="${userId}"]`);
+        if (tab && !tab.querySelector('.perm-tab-badge')) {
+            const badge = document.createElement('span');
+            badge.className = 'perm-tab-badge';
+            badge.textContent = '!';
+            badge.title = 'Has custom overrides';
+            tab.appendChild(badge);
+        }
+        showToast(enabled ? 'Permission enabled' : 'Permission disabled', 'success');
+    })
+    .catch(() => {
+        toggle.classList.remove('saving');
+        checkbox.disabled = false;
+        checkbox.checked = !enabled;
+        showToast('Network error', 'error');
+    });
+}
+
+function showToast(msg, type) {
+    Swal.fire({ toast:true, position:'bottom-end', icon:type, title:msg,
+                showConfirmButton:false, timer:2000, timerProgressBar:true });
+}
+
+// Select first user by default
+document.addEventListener('DOMContentLoaded', () => {
+    const first = document.querySelector('.perm-user-tab');
+    if (first) first.click();
+});
+</script>
+}

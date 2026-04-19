@@ -1,0 +1,125 @@
+@model FidsSystem.Models.Flight?
+@{ Layout = null; string orient = ViewBag.Orient ?? "h"; }
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>รับสัมภาระ - สายพาน @ViewBag.Belt</title>
+    <link rel="stylesheet" href="~/display/css/belt.css" />
+</head>
+<body>
+    <div class="bc-container" data-orient="@orient">
+
+        @if (Model != null)
+        {
+            <!-- TOP: airline logo | flight info -->
+            <div class="bc-top">
+                <div class="bc-airline @GetAirlineBg(Model.Airline)">
+                    @if ((Model.Airline ?? "").ToLower().Contains("airasia") || (Model.Airline ?? "").ToLower().Contains("air asia"))
+                    {
+                        <img src="~/images/logo/AirAsia.png" alt="AirAsia" />
+                    }
+                    else
+                    {
+                        <span class="bc-airline-text">@(Model.Airline ?? "AIRLINE")</span>
+                    }
+                </div>
+                <div class="bc-flight-info">
+                    <div class="bc-flight-label">เที่ยวบิน</div>
+                    <div class="bc-flight-number">@Model.FlightNumber</div>
+                </div>
+            </div>
+
+            <!-- MIDDLE: FROM + city -->
+            <div class="bc-middle">
+                <div class="bc-from-label">จาก</div>
+                <div class="bc-city">@(Model.Origin ?? "-")</div>
+            </div>
+
+            <!-- BOTTOM: status | airport + time -->
+            <div class="bc-bottom">
+                <div class="bc-status-wrap">
+                    <span class="bc-status-label">สถานะ</span>
+                    <span class="bc-status-value @GetStatusClass(Model.Status)">@(Model.Status ?? "รอสัมภาระ")</span>
+                </div>
+                <div class="bc-airport-time">
+                    <div class="bc-airport-info">
+                        <span class="bc-airport-name">ท่าอากาศยานนานาชาติสุราษฎร์ธานี</span>
+                        <span class="bc-airport-en">Surat Thani Airport</span>
+                    </div>
+                    <span class="bc-time" id="current-time"></span>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="bc-middle" style="flex:1;">
+                <div class="bc-from-label">สายพาน @ViewBag.Belt</div>
+                <div class="bc-city" style="font-size:clamp(28px,4vw,48px); color:rgba(255,255,255,0.3);">ไม่มีเที่ยวบิน</div>
+            </div>
+            <div class="bc-bottom">
+                <div class="bc-status-wrap"></div>
+                <div class="bc-airport-time">
+                    <div class="bc-airport-info">
+                        <span class="bc-airport-name">ท่าอากาศยานนานาชาติสุราษฎร์ธานี</span>
+                        <span class="bc-airport-en">Surat Thani Airport</span>
+                    </div>
+                    <span class="bc-time" id="current-time"></span>
+                </div>
+            </div>
+        }
+
+    </div>
+
+    <script>
+        function updateTime() {
+            const now = new Date();
+            const thaiMonths = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+            const d = now.getDate();
+            const mo = thaiMonths[now.getMonth()];
+            const y = now.getFullYear() + 543;
+            const h = String(now.getHours()).padStart(2,'0');
+            const mi = String(now.getMinutes()).padStart(2,'0');
+            const el = document.getElementById('current-time');
+            if (el) el.textContent = `${d} ${mo} ${y} | ${h}:${mi} น.`;
+        }
+        updateTime();
+        setInterval(updateTime, 1000);
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+    <script>
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/hubs/flight").withAutomaticReconnect([0,2000,5000,10000,30000]).build();
+        connection.on("FlightUpdated", () => setTimeout(() => location.reload(), 500));
+        connection.start().catch(e => console.warn("SignalR:", e));
+        const _screenKey = "belt-@ViewBag.Belt";
+        setInterval(() => {
+            fetch('/Screen/Heartbeat', { method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({ screenKey: _screenKey }) }).catch(() => {});
+        }, 30000);
+    </script>
+</body>
+</html>
+
+@functions {
+    string GetAirlineBg(string? airline) {
+        if (string.IsNullOrEmpty(airline)) return "bc-airline-dark";
+        var a = airline.ToLower();
+        if (a.Contains("airasia") || a.Contains("air asia")) return "bc-airline-red";
+        if (a.Contains("lion")) return "bc-airline-orange";
+        if (a.Contains("nok")) return "bc-airline-blue";
+        return "bc-airline-dark";
+    }
+    string GetStatusClass(string? status) {
+        if (string.IsNullOrEmpty(status)) return "s-default";
+        return status.ToUpper() switch {
+            "LANDED" or "ลงจอดแล้ว" => "s-landed",
+            "BAGGAGE" or "รับสัมภาระ" => "s-baggage",
+            "EXPECTED" or "คาดว่าจะถึง" => "s-expected",
+            "DELAYED" or "ล่าช้า" => "s-delayed",
+            "CANCELLED" or "ยกเลิก" => "s-cancelled",
+            _ => "s-default"
+        };
+    }
+}

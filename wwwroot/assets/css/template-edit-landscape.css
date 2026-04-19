@@ -1,0 +1,5 @@
+/* ===== LANDSCAPE (16:9) — canvas 750×420 ===== */
+.canvas-screen-bg.landscape {
+    width: 750px;
+    height: 420px;
+}

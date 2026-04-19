@@ -1,0 +1,242 @@
+@model List<FidsSystem.Models.Flight>
+@{ ViewData["Title"] = "Flight Management"; }
+
+@section TopbarActions {
+    @if (ViewBag.CanCreate == true)
+    {
+        <a asp-action="Create" class="btn-add">
+            <i class="bi bi-plus-lg"></i> Flight
+        </a>
+    }
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert-success-inline">
+        <i class="bi bi-check-circle-fill"></i>@TempData["Success"]
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert-error-inline">
+        <i class="bi bi-x-circle-fill"></i>@TempData["Error"]
+    </div>
+}
+
+<div class="card">
+    <!-- Filter Bar -->
+    <form method="get" class="filter-bar">
+        <select name="flightType" class="filter-select" style="min-width:130px;">
+            <option value="">Type</option>
+            <option value="Departure" selected="@(ViewBag.FlightType=="Departure"?"selected":null)">Departure</option>
+            <option value="Arrival"   selected="@(ViewBag.FlightType=="Arrival"  ?"selected":null)">Arrival</option>
+        </select>
+        <select name="status" class="filter-select" style="min-width:140px;">
+            <option value="">Status</option>
+            @foreach (var s in new[]{"On Time","Check-In Open","Boarding","Final Call","Delayed","Cancelled","Departed","Landed"})
+            {
+                <option value="@s" selected="@(ViewBag.Status==s?"selected":null)">@s</option>
+            }
+        </select>
+        <div class="filter-input-wrap">
+            <i class="bi bi-search"></i>
+            <input type="text" name="search" class="filter-input"
+                   placeholder="Search flight, airline..." value="@ViewBag.Search" />
+        </div>
+        <button type="submit" class="btn-search"><i class="bi bi-search me-1"></i>Search</button>
+        <a asp-action="Index" class="btn-clear"><i class="bi bi-x me-1"></i>Clear</a>
+    </form>
+
+    <!-- Bulk Actions Bar (hidden until checkbox selected) -->
+    <div id="bulkBar" style="display:none; align-items:center; gap:10px; padding:10px 20px; background:var(--card-bg); border-bottom:1px solid var(--border-color);">
+        <span id="bulkCount" style="color:#e4e6ef; font-size:.88rem;"></span>
+        <select id="bulkStatus" class="filter-select" style="min-width:160px;">
+            <option value="">— Change Status to —</option>
+            @foreach (var s in new[]{"On Time","Check-In Open","Boarding","Final Call","Gate Closed","Departed","Delayed","Cancelled","Landed","Expected"})
+            {
+                <option>@s</option>
+            }
+        </select>
+        <button class="btn-search" onclick="applyBulk()"><i class="bi bi-pencil-square me-1"></i>Apply</button>
+        <button class="btn-clear" onclick="clearBulk()"><i class="bi bi-x me-1"></i>Cancel</button>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table" id="flightTable">
+            <thead>
+                <tr>
+                    <th style="width:36px;">
+                        <input type="checkbox" id="checkAll" onchange="toggleAll(this)" class="form-check-input" />
+                    </th>
+                    <th style="width:10%;">Flight No.</th>
+                    <th style="width:12%;">Airline</th>
+                    <th style="width:7%; text-align:center;">Type</th>
+                    <th style="width:10%;">Origin</th>
+                    <th style="width:10%;">Destination</th>
+                    <th style="width:11%;">Scheduled</th>
+                    <th style="width:7%; text-align:center;">Gate/Belt</th>
+                    <th style="width:11%; text-align:center;">Status</th>
+                    <th style="text-align:right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr data-id="@item.Id">
+                        <td><input type="checkbox" class="row-check form-check-input" value="@item.Id" onchange="onRowCheck()" /></td>
+                        <td class="fw-600">@item.FlightNumber</td>
+                        <td>@(item.Airline ?? "-")</td>
+                        <td style="text-align:center;">
+                            @if (item.FlightType == "Departure")
+                            {
+                                <span class="badge-role badge-admin" style="font-size:.72rem;"><i class="bi bi-airplane me-1"></i>DEP</span>
+                            }
+                            else if (item.FlightType == "Arrival")
+                            {
+                                <span class="badge-role" style="font-size:.72rem; background:var(--blue-light); color:var(--blue);">
+                                    <i class="bi bi-airplane-fill me-1" style="transform:rotate(180deg); display:inline-block;"></i>ARR
+                                </span>
+                            }
+                        </td>
+                        <td style="color:#7e8299;">@(item.Origin ?? "-")</td>
+                        <td style="color:#7e8299;">@(item.Destination ?? "-")</td>
+                        <td style="color:#7e8299; font-size:.83rem;">@item.ScheduledTime.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td style="text-align:center; color:#7e8299;">@(item.Gate ?? item.Belt ?? "-")</td>
+                        <td style="text-align:center;">
+                            <div class="status-dropdown" style="position:relative; display:inline-block;">
+                                @{
+                                    var statusColor = item.Status switch {
+                                        "On Time"       => "#10B981",
+                                        "Delayed"       => "#F59E0B",
+                                        "Boarding"      => "#1A6BFA",
+                                        "Final Call"    => "#F97316",
+                                        "Check-In Open" => "#6366F1",
+                                        "Landed"        => "#06B6D4",
+                                        "Cancelled"     => "#EF4444",
+                                        "Departed"      => "#8B5CF6",
+                                        _ => "#b5b5c3"
+                                    };
+                                }
+                                <button class="status-btn"
+                                        style="background:none; border:none; font-size:.78rem; font-weight:700; color:@statusColor; cursor:pointer; padding:3px 6px; border-radius:4px;"
+                                        onclick="openStatusPicker(this, @item.Id)"
+                                        title="Click to quick-change status">
+                                    @(item.Status ?? "-") <i class="bi bi-caret-down-fill" style="font-size:.6rem;"></i>
+                                </button>
+                            </div>
+                        </td>
+                        <td class="text-end">
+                            <a asp-action="History" asp-route-id="@item.Id" class="btn-edit" style="background:transparent; color:#7e8299; border:1px solid var(--border-color);" title="History">
+                                <i class="bi bi-clock-history"></i>
+                            </a>
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn-edit">
+                                <i class="bi bi-pencil-fill me-1"></i>Edit
+                            </a>
+                            <form asp-action="Delete" asp-route-id="@item.Id" method="post"
+                                  class="d-inline" id="del-@item.Id">
+                                <button type="button" class="btn-delete"
+                                        onclick="confirmDelete('del-@item.Id','Delete @item.FlightNumber?')">
+                                    <i class="bi bi-trash-fill me-1"></i>Del
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="10">
+                        <div class="empty-state"><i class="bi bi-airplane"></i><p>No flights found.</p></div>
+                    </td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Quick-status picker popup -->
+<div id="statusPicker" style="display:none; position:fixed; z-index:9999; background:var(--card-bg);
+     border:1px solid var(--border-color); border-radius:10px; padding:8px; min-width:180px; box-shadow:0 8px 30px rgba(0,0,0,.5);">
+    <div style="font-size:.72rem; color:#7e8299; padding:4px 8px 8px; border-bottom:1px solid var(--border-color); margin-bottom:4px;">
+        Quick Status Change
+    </div>
+    @foreach (var s in new[]{"On Time","Check-In Open","Boarding","Final Call","Gate Closed","Departed","Delayed","Cancelled","Landed","Expected"})
+    {
+        <div class="status-pick-item" data-status="@s"
+             style="padding:7px 10px; font-size:.82rem; cursor:pointer; border-radius:6px; color:#e4e6ef;"
+             onmouseenter="this.style.background='var(--hover-bg)'"
+             onmouseleave="this.style.background=''"
+             onclick="quickStatus('@s')">
+            @s
+        </div>
+    }
+</div>
+
+@section Scripts {
+<script>
+let _pickerFlightId = null;
+
+// ── Quick status picker ────────────────────────────────────────
+function openStatusPicker(btn, flightId) {
+    _pickerFlightId = flightId;
+    const picker = document.getElementById('statusPicker');
+    const rect = btn.getBoundingClientRect();
+    picker.style.top  = (rect.bottom + 4 + window.scrollY) + 'px';
+    picker.style.left = rect.left + 'px';
+    picker.style.display = 'block';
+}
+
+async function quickStatus(status) {
+    document.getElementById('statusPicker').style.display = 'none';
+    if (!_pickerFlightId) return;
+    const res = await fetch(`/Flight/UpdateStatus?id=${_pickerFlightId}&status=${encodeURIComponent(status)}`, { method:'POST' });
+    if (res.ok) location.reload();
+    else alert('Failed to update status.');
+}
+
+document.addEventListener('click', e => {
+    if (!e.target.closest('.status-dropdown') && !e.target.closest('#statusPicker'))
+        document.getElementById('statusPicker').style.display = 'none';
+});
+
+// ── Bulk select ───────────────────────────────────────────────
+function toggleAll(cb) {
+    document.querySelectorAll('.row-check').forEach(c => c.checked = cb.checked);
+    onRowCheck();
+}
+
+function onRowCheck() {
+    const checked = [...document.querySelectorAll('.row-check:checked')];
+    const bar = document.getElementById('bulkBar');
+    if (checked.length > 0) {
+        bar.style.display = 'flex';
+        document.getElementById('bulkCount').textContent = checked.length + ' flight(s) selected';
+    } else {
+        bar.style.display = 'none';
+        document.getElementById('checkAll').checked = false;
+    }
+}
+
+function clearBulk() {
+    document.querySelectorAll('.row-check, #checkAll').forEach(c => c.checked = false);
+    document.getElementById('bulkBar').style.display = 'none';
+}
+
+async function applyBulk() {
+    const status = document.getElementById('bulkStatus').value;
+    if (!status) { alert('Please select a status.'); return; }
+    const ids = [...document.querySelectorAll('.row-check:checked')].map(c => parseInt(c.value));
+    if (!ids.length) return;
+    const res = await fetch('/Flight/BulkUpdateStatus', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids, status })
+    });
+    const data = await res.json();
+    if (res.ok) {
+        location.reload();
+    } else {
+        alert(data.error || 'Failed.');
+    }
+}
+</script>
+}

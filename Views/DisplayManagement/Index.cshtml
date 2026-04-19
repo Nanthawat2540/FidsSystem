@@ -1,0 +1,158 @@
+@model List<FidsSystem.Models.DisplayDevice>
+@{ ViewData["Title"] = "Display Management"; }
+
+@section TopbarActions {
+    <a asp-action="Create" class="btn-add"><i class="bi bi-plus-lg"></i> Display</a>
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert-success-inline">
+        <i class="bi bi-check-circle-fill"></i>@TempData["Success"]
+    </div>
+}
+
+<div class="card">
+    <form method="get" class="filter-bar">
+        <select name="zone" class="filter-select" style="min-width:110px;">
+            <option value="">All Zones</option>
+            @if (ViewBag.Zones != null)
+            {
+                foreach (var z in (IEnumerable<FidsSystem.Models.Zone>)ViewBag.Zones)
+                {
+                    if (ViewBag.Zone?.ToString() == z.Id.ToString())
+                    {
+                        <option value="@z.Id" selected="selected">@z.ZoneName</option>
+                    }
+                    else
+                    {
+                        <option value="@z.Id">@z.ZoneName</option>
+                    }
+                }
+            }
+        </select>
+        <select name="ratio" class="filter-select" style="min-width:110px;">
+            <option value="">Ratio</option>
+            <option value="16:9">16:9</option>
+            <option value="9:16">9:16</option>
+        </select>
+        <div class="filter-input-wrap">
+            <i class="bi bi-search"></i>
+            <input type="text" name="search" class="filter-input"
+                   placeholder="Search Device name &amp; Template..." value="@ViewBag.Search" />
+        </div>
+        <button type="submit" class="btn-search"><i class="bi bi-search me-1"></i>Search</button>
+        <a asp-action="Index" class="btn-clear"><i class="bi bi-x me-1"></i>Clear</a>
+    </form>
+
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th style="width:8%;">Device ID</th>
+                    <th style="width:7%;">Zone</th>
+                    <th style="width:14%;">Device</th>
+                    <th style="width:14%;">Template</th>
+                    <th style="width:8%; text-align:center;">Ratio</th>
+                    <th style="width:12%;">Data set</th>
+                    <th style="width:10%; text-align:center;">Display</th>
+                    <th style="width:8%; text-align:center;">Preview</th>
+                    <th style="width:10%; text-align:center;">Screen URL</th>
+                    <th style="width:19%; text-align:right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td class="fw-600">@item.Id</td>
+                        <td>@item.ZoneName</td>
+                        <td class="fw-600" style="color:#0095ff;">@item.DeviceName</td>
+                        <td style="color:#7e8299;">@item.TemplateName</td>
+                        <td style="text-align:center; color:#7e8299;">@item.Ratio</td>
+                        <td>@item.DataSet</td>
+                        <td style="text-align:center;">
+                            <label class="toggle-switch">
+                                <input type="checkbox" @(item.IsDisplayOn ? "checked" : "") onchange="toggleDisplay(@item.Id, this)">
+                                <div class="toggle-track"></div>
+                                <span class="toggle-label">@(item.IsDisplayOn ? "On" : "Off")</span>
+                            </label>
+                        </td>
+                        <td style="text-align:center;">
+                            <a asp-action="Preview" asp-route-id="@item.Id" target="_blank"
+                               class="btn-preview" title="Preview">
+                                <i class="bi bi-display"></i>
+                            </a>
+                        </td>
+                        <td style="text-align:center;">
+                            <a href="/Screen/Show/@item.Id" target="_blank"
+                               class="btn-preview" title="Open on device" style="color:#1a9e3f;">
+                                <i class="bi bi-cast"></i>
+                            </a>
+                            <button type="button" class="btn-preview" title="Copy URL"
+                                    onclick="copyScreenUrl(@item.Id)"
+                                    style="background:none;border:none;cursor:pointer;padding:0 4px;">
+                                <i class="bi bi-clipboard" id="clip-@item.Id" style="color:#7e8299;"></i>
+                            </button>
+                        </td>
+                        <td class="text-end">
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn-edit">
+                                <i class="bi bi-pencil-fill"></i> Edit
+                            </a>
+                            <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline" id="del-disp-@item.Id">
+                                <button type="button" class="btn-delete"
+                                        onclick="confirmDelete('del-disp-@item.Id','Delete display &quot;@item.DeviceName&quot;?')">
+                                    <i class="bi bi-trash-fill"></i> Delete
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="10">
+                            <div class="empty-state">
+                                <i class="bi bi-display"></i>
+                                <p>No display devices found.</p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (Model.Any())
+    {
+        <div class="pagination-bar">
+            <button class="page-btn"><i class="bi bi-chevron-left" style="font-size:.75rem;"></i></button>
+            <button class="page-btn active">1</button>
+            <button class="page-btn"><i class="bi bi-chevron-right" style="font-size:.75rem;"></i></button>
+            <select class="page-btn" style="width:auto;padding:0 10px;font-size:.85rem;color:#7e8299;">
+                <option>20 / page</option><option>50 / page</option>
+            </select>
+        </div>
+    }
+</div>
+
+@section Scripts {
+<script>
+function copyScreenUrl(id) {
+    const url = window.location.origin + '/Screen/Show/' + id;
+    navigator.clipboard.writeText(url).then(() => {
+        const icon = document.getElementById('clip-' + id);
+        if (icon) {
+            icon.className = 'bi bi-clipboard-check';
+            icon.style.color = '#1a9e3f';
+            setTimeout(() => { icon.className = 'bi bi-clipboard'; icon.style.color = '#7e8299'; }, 2000);
+        }
+    });
+}
+function toggleDisplay(id, checkbox) {
+    const label = checkbox.closest('.toggle-switch').querySelector('.toggle-label');
+    fetch(`/DisplayManagement/ToggleOn/${id}`, { method: 'POST', headers: { 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || '' } })
+        .then(r => r.json())
+        .then(data => { if (label) label.textContent = data.isOn ? 'On' : 'Off'; checkbox.checked = data.isOn; });
+}
+</script>
+}

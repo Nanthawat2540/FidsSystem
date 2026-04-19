@@ -1,0 +1,108 @@
+@model FidsSystem.Models.Flight?
+@{ Layout = null; string orient = ViewBag.Orient ?? "h"; }
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เคาน์เตอร์เช็คอิน</title>
+    <link rel="stylesheet" href="~/display/css/checkin.css" />
+</head>
+<body>
+    <div class="ci-container" data-orient="@orient">
+
+        <div class="ci-main">
+
+            @if (Model != null)
+            {
+                <!-- Specific flight check-in -->
+                <div class="ci-title">
+                    @(Model.FlightType == "Arrival" ? "เคาน์เตอร์รับสัมภาระ" : "เคาน์เตอร์เช็คอิน")
+                </div>
+
+                <div class="ci-flight-card">
+                    @if ((Model.Airline ?? "").ToLower().Contains("airasia") || (Model.Airline ?? "").ToLower().Contains("air asia"))
+                    {
+                        <img class="ci-airline-logo" src="~/images/logo/AirAsia.png" alt="AirAsia" />
+                    }
+                    else
+                    {
+                        <div class="ci-airline-text">@(Model.Airline ?? "AIRLINE")</div>
+                    }
+                    <div class="ci-flight-num">@Model.FlightNumber</div>
+                    <div class="ci-dest-label">@(Model.FlightType == "Arrival" ? "จาก" : "ไปยัง")</div>
+                    <div class="ci-dest">
+                        @(Model.FlightType == "Arrival" ? (Model.Origin ?? "-") : (Model.Destination ?? "-"))
+                    </div>
+                    <div class="ci-status-badge @GetStatusClass(Model.Status)">
+                        @(Model.Status ?? "เปิดให้เช็คอิน")
+                    </div>
+                </div>
+            }
+            else
+            {
+                <!-- Common all-airlines check-in -->
+                <div class="ci-title">เคาน์เตอร์เช็คอินทุกสายการบิน</div>
+                <div class="ci-card">
+                    <svg class="ci-plane-icon" viewBox="0 0 24 24">
+                        <path d="M21,16V14L13,9V3.5A1.5,1.5 0 0,0 11.5,2A1.5,1.5 0 0,0 10,3.5V9L2,14V16L10,13.5V19L8,20.5V22L11.5,21L15,22V20.5L13,19V13.5L21,16Z"/>
+                    </svg>
+                    <span class="ci-card-text">ทุกสายการบิน</span>
+                </div>
+            }
+
+        </div>
+
+        <!-- FOOTER -->
+        <div class="ci-footer">
+            <div class="ci-airport">
+                <div class="ci-airport-icon">✈</div>
+                <div>
+                    <div class="ci-airport-name">ท่าอากาศยานนานาชาติสุราษฎร์ธานี</div>
+                    <div class="ci-airport-en">Surat Thani Airport</div>
+                </div>
+            </div>
+            <div class="ci-time" id="current-time"></div>
+        </div>
+
+    </div>
+
+    <script>
+        function updateTime() {
+            const now = new Date();
+            const thaiMonths = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+            const d = now.getDate();
+            const mo = thaiMonths[now.getMonth()];
+            const y = now.getFullYear() + 543;
+            const h = String(now.getHours()).padStart(2,'0');
+            const mi = String(now.getMinutes()).padStart(2,'0');
+            const el = document.getElementById('current-time');
+            if (el) el.textContent = `${d} ${mo} ${y} | ${h}:${mi} น.`;
+        }
+        updateTime();
+        setInterval(updateTime, 1000);
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+    <script>
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/hubs/flight").withAutomaticReconnect([0,2000,5000,10000,30000]).build();
+        connection.on("FlightUpdated", () => setTimeout(() => location.reload(), 500));
+        connection.start().catch(e => console.warn("SignalR:", e));
+    </script>
+</body>
+</html>
+
+@functions {
+    string GetStatusClass(string? status) {
+        if (string.IsNullOrEmpty(status)) return "s-default";
+        return status.ToUpper() switch {
+            "CHECK-IN OPEN" or "เปิดให้เช็คอิน" => "s-checkin",
+            "BOARDING" or "ลงทะเบียนรับบัตรที่นั่ง" => "s-boarding",
+            "GATE OPEN" or "ประตูเปิด" => "s-gateopen",
+            "DELAYED" or "ล่าช้า" => "s-delayed",
+            "CANCELLED" or "ยกเลิก" => "s-cancelled",
+            "LANDED" or "ลงจอดแล้ว" => "s-landed",
+            _ => "s-default"
+        };
+    }
+}

@@ -1,0 +1,62 @@
+@model FidsSystem.Models.DisplayDevice
+@{ ViewData["Title"] = "Add Display Device"; }
+
+@section TopbarActions {
+    <button type="submit" form="displayForm" class="btn-save">Save</button>
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-6 col-md-8">
+        <div class="card">
+            <h5 class="fw-bold mb-4" style="color:#3f4254; font-size:1.1rem;">Add Display Device</h5>
+            <form id="displayForm" asp-action="Create" method="post">
+                <div class="mb-3">
+                    <label class="form-label-fids">Zone <span class="required-star">*</span></label>
+                    <select name="ZoneId" class="filter-select" style="width:100%; min-width:unset;" required>
+                        <option value="">Select Zone</option>
+                        @if (ViewBag.Zones != null)
+                        {
+                            foreach (var z in (IEnumerable<FidsSystem.Models.Zone>)ViewBag.Zones)
+                            {
+                                <option value="@z.Id">@z.ZoneName</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label-fids">Device Name <span class="required-star">*</span></label>
+                    <input asp-for="DeviceName" class="form-control-fids" placeholder="e.g. BC-H" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label-fids">Template</label>
+                    <select name="TemplateId" class="filter-select" style="width:100%; min-width:unset;">
+                        <option value="">Select Template</option>
+                        @if (ViewBag.Templates != null)
+                        {
+                            foreach (var t in (IEnumerable<FidsSystem.Models.TemplateItem>)ViewBag.Templates)
+                            {
+                                <option value="@t.Id">@t.Name (@t.DeviceType - @t.Ratio)</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label-fids">Ratio</label>
+                    <select asp-for="Ratio" class="filter-select" style="width:100%; min-width:unset;">
+                        <option value="">Select Ratio</option>
+                        <option value="16:9">16:9</option>
+                        <option value="9:16">9:16</option>
+                    </select>
+                </div>
+                <div class="mb-5">
+                    <label class="form-label-fids">Data Set</label>
+                    <input asp-for="DataSet" class="form-control-fids" placeholder="e.g. Belt 1, Page 1" />
+                </div>
+                <div class="d-flex justify-content-end gap-3">
+                    <a asp-action="Index" class="btn-cancel">Cancel</a>
+                    <button type="submit" class="btn-save">Add</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

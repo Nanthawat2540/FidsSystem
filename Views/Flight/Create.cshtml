@@ -1,0 +1,120 @@
+@model FidsSystem.Models.Flight
+@{ ViewData["Title"] = "Add Flight"; }
+
+@section TopbarActions {
+    <a asp-action="Index" class="btn-cancel">
+        <i class="bi bi-arrow-left me-1"></i>Back
+    </a>
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7 col-md-10">
+        <div class="card">
+            <h5 class="fw-bold mb-4" style="color:var(--gray-700); font-size:1.05rem;">
+                <i class="bi bi-airplane me-2" style="color:var(--blue);"></i>Add Flight
+            </h5>
+            <form asp-action="Create" method="post">
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label-fids">Flight Number <span class="required-star">*</span></label>
+                        <div class="input-icon-wrap">
+                            <i class="bi bi-hash input-icon"></i>
+                            <input type="text" name="FlightNumber" class="form-control-fids"
+                                   placeholder="e.g. TG101" maxlength="20" required />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label-fids">Airline</label>
+                        <div class="input-icon-wrap">
+                            <i class="bi bi-building input-icon"></i>
+                            <input type="text" name="Airline" class="form-control-fids"
+                                   placeholder="e.g. Thai Airways" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label-fids">Flight Type <span class="required-star">*</span></label>
+                        <select name="FlightType" class="filter-select" style="width:100%; min-width:unset;" required>
+                            <option value="">-- Select Type --</option>
+                            <option value="Departure">Departure</option>
+                            <option value="Arrival">Arrival</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label-fids">Status</label>
+                        <select name="Status" class="filter-select" style="width:100%; min-width:unset;">
+                            <option value="">-- Select Status --</option>
+                            <option value="On Time">On Time</option>
+                            <option value="Delayed">Delayed</option>
+                            <option value="Boarding">Boarding</option>
+                            <option value="Departed">Departed</option>
+                            <option value="Landed">Landed</option>
+                            <option value="Cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label-fids">Origin</label>
+                        <div class="input-icon-wrap">
+                            <i class="bi bi-geo-alt input-icon"></i>
+                            <input type="text" name="Origin" class="form-control-fids"
+                                   placeholder="e.g. BKK" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label-fids">Destination</label>
+                        <div class="input-icon-wrap">
+                            <i class="bi bi-geo-alt-fill input-icon"></i>
+                            <input type="text" name="Destination" class="form-control-fids"
+                                   placeholder="e.g. HKT" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label-fids">Scheduled Time <span class="required-star">*</span></label>
+                        <input type="datetime-local" name="ScheduledTime" class="form-control-fids" required />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label-fids">Estimated Time</label>
+                        <input type="datetime-local" name="EstimatedTime" class="form-control-fids" />
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label-fids">Gate</label>
+                        <div class="input-icon-wrap">
+                            <i class="bi bi-door-open input-icon"></i>
+                            <input type="text" name="Gate" class="form-control-fids"
+                                   placeholder="e.g. A12" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label-fids">Belt</label>
+                        <div class="input-icon-wrap">
+                            <i class="bi bi-luggage input-icon"></i>
+                            <input type="text" name="Belt" class="form-control-fids"
+                                   placeholder="e.g. 3" />
+                        </div>
+                    </div>
+                </div>
+
+                <div asp-validation-summary="ModelOnly" class="alert-error-inline mb-3"></div>
+
+                <div class="d-flex justify-content-end gap-3">
+                    <a asp-action="Index" class="btn-cancel">Cancel</a>
+                    <button type="submit" class="btn-save">
+                        <i class="bi bi-check-lg me-1"></i>Add Flight
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

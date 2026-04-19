@@ -1,0 +1,151 @@
+@model List<FidsSystem.Models.Flight>
+@{ Layout = null; string orient = ViewBag.Orient ?? "v"; }
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ประตู @ViewBag.Gate - เที่ยวบินขาออก</title>
+    <link rel="stylesheet" href="~/display/css/gates.css" />
+</head>
+<body>
+    <div class="container" data-orient="@orient">
+
+        <!-- TOP HEADER -->
+        <div class="header">
+            <div class="header-left">
+                <svg class="header-plane" viewBox="0 0 24 24">
+                    <path d="M21,16V14L13,9V3.5A1.5,1.5 0 0,0 11.5,2A1.5,1.5 0 0,0 10,3.5V9L2,14V16L10,13.5V19L8,20.5V22L11.5,21L15,22V20.5L13,19V13.5L21,16Z"/>
+                </svg>
+                <span class="header-title">ขาออก</span>
+            </div>
+            <div class="header-right">
+                <div class="airport-pill">
+                    <div class="airport-icon">✈</div>
+                    <div>
+                        <div class="airport-th">ท่าอากาศยานนานาชาติ</div>
+                        <div class="airport-en">Surat Thani Airport</div>
+                    </div>
+                </div>
+                <div class="time-pill" id="current-time"></div>
+            </div>
+        </div>
+
+        <!-- COLUMN HEADERS -->
+        <div class="col-header gate-cols">
+            <div>เที่ยวบิน</div>
+            <div>สายการบิน</div>
+            <div>ปลายทาง</div>
+            <div>เวลา</div>
+            <div>ประตู</div>
+            <div>หมายเหตุ</div>
+        </div>
+
+        <!-- FLIGHT BOARD -->
+        <div class="flight-board">
+            @foreach (var item in Model)
+            {
+                <div class="flight-row gate-cols">
+                    <div class="flight-number">@item.FlightNumber</div>
+                    <div class="airline">
+                        <span class="airline-logo @GetAirlineClass(item.Airline)">@(item.Airline ?? "-")</span>
+                    </div>
+                    <div class="from">@(item.Destination ?? "-")</div>
+                    <div class="time">@item.ScheduledTime.ToString("HH:mm")</div>
+                    <div>
+                        <span class="gate-badge">@(item.Gate ?? ViewBag.Gate)</span>
+                    </div>
+                    <div class="status @GetStatusClass(item.Status)">@(item.Status ?? "-")</div>
+                </div>
+            }
+            @if (!Model.Any())
+            {
+                <div class="flight-row gate-cols">
+                    <div style="grid-column:1/-1; text-align:center; color:rgba(255,255,255,0.25); font-size:14px; padding:30px 0;">
+                        ไม่มีเที่ยวบิน
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- FOOTER -->
+        <div class="footer">
+            <div class="footer-text">
+                <div class="footer-content">
+                    <svg class="plane-icon" viewBox="0 0 24 24">
+                        <path d="M21,16V14L13,9V3.5A1.5,1.5 0 0,0 11.5,2A1.5,1.5 0 0,0 10,3.5V9L2,14V16L10,13.5V19L8,20.5V22L11.5,21L15,22V20.5L13,19V13.5L21,16Z"/>
+                    </svg>
+                    <span>เที่ยวบินขาออก • FLIGHT DEPARTURES • 出发航班 •</span>
+                </div>
+            </div>
+            <div class="footer-time">
+                <span class="current-time" id="footer-time"></span>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+    <script>
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/hubs/flight")
+            .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
+            .build();
+        connection.on("FlightUpdated", () => setTimeout(() => location.reload(), 500));
+        connection.start().catch(e => console.warn("SignalR:", e));
+
+        // Heartbeat
+        const _screenKey = "gate-@ViewBag.Gate";
+        setInterval(() => {
+            fetch('/Screen/Heartbeat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ screenKey: _screenKey })
+            }).catch(() => {});
+        }, 30000);
+
+        function updateTime() {
+            const now = new Date();
+            const thaiMonths = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+            const d = now.getDate();
+            const mo = thaiMonths[now.getMonth()];
+            const y = now.getFullYear() + 543;
+            const h = String(now.getHours()).padStart(2,'0');
+            const mi = String(now.getMinutes()).padStart(2,'0');
+            const txt = `${d} ${mo} ${y} | ${h}:${mi} น.`;
+            const el1 = document.getElementById('current-time');
+            const el2 = document.getElementById('footer-time');
+            if (el1) el1.textContent = txt;
+            if (el2) el2.textContent = txt;
+        }
+        updateTime();
+        setInterval(updateTime, 1000);
+    </script>
+</body>
+</html>
+
+@functions {
+    string GetAirlineClass(string? airline) {
+        if (string.IsNullOrEmpty(airline)) return "";
+        var a = airline.ToLower();
+        if (a.Contains("airasia") || a.Contains("air asia")) return "air-asia";
+        if (a.Contains("nok")) return "nok-air";
+        if (a.Contains("lion")) return "lion-air";
+        if (a.Contains("vietjet")) return "vietjet";
+        return "";
+    }
+    string GetStatusClass(string? status) {
+        if (string.IsNullOrEmpty(status)) return "s-default";
+        return status.ToUpper() switch {
+            "CHECK-IN OPEN" or "เปิดให้เช็คอิน" => "s-checkin",
+            "BOARDING" or "ลงทะเบียนรับบัตรที่นั่ง" => "s-boarding",
+            "GATE OPEN" or "ประตูเปิด" => "s-gateopen",
+            "DELAYED" or "ล่าช้า" => "s-delayed",
+            "CANCELLED" or "ยกเลิก" => "s-cancelled",
+            "LANDED" or "ลงจอดแล้ว" => "s-landed",
+            "BAGGAGE" or "รับสัมภาระ" => "s-baggage",
+            "EXPECTED" or "คาดว่าจะถึง" => "s-expected",
+            _ => "s-default"
+        };
+    }
+}

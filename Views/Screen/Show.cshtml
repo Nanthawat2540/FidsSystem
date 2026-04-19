@@ -1,0 +1,128 @@
+@model FidsSystem.Models.DisplayDevice
+@{
+    Layout = null;
+    var tmpl       = ViewBag.Template as FidsSystem.Models.TemplateItem;
+    var deviceType = tmpl?.DeviceType ?? "";
+    var ratio      = tmpl?.Ratio ?? Model.Ratio ?? "16:9";
+    var isPortrait = ratio == "9:16";
+    var refreshMs  = 30000; // auto-refresh canvas every 30 s
+}
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@Model.DeviceName</title>
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body {
+            width: 100%; height: 100%;
+            background: #000;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: none;
+        }
+        #screenCanvas { display: block; }
+
+        /* info overlay — visible on hover only */
+        #screenInfo {
+            position: fixed;
+            top: 14px; left: 14px;
+            background: rgba(0,0,0,.6);
+            border: 1px solid rgba(255,255,255,.15);
+            border-radius: 10px;
+            padding: 8px 14px;
+            color: #fff;
+            font: 12px/1.6 'Segoe UI', sans-serif;
+            opacity: 0;
+            transition: opacity .3s;
+            pointer-events: none;
+            z-index: 10;
+        }
+        body:hover #screenInfo { opacity: 1; }
+        #screenInfo strong { color: #4FC3F7; }
+        #screenInfo .badge {
+            display: inline-block;
+            background: #1a9e3f;
+            color: #fff;
+            font-size: 10px;
+            padding: 1px 7px;
+            border-radius: 99px;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="screenCanvas"></canvas>
+
+    <div id="screenInfo">
+        <strong>@Model.DeviceName</strong>
+        <span class="badge">LIVE</span><br>
+        @deviceType &nbsp;·&nbsp; @ratio
+        @if (!string.IsNullOrEmpty(Model.DataSet)) {
+            <br><span style="color:#aaa;">@Model.DataSet</span>
+        }
+        <br><span style="color:#555;" id="lastRefresh"></span>
+    </div>
+
+    <!-- drawing engine -->
+    <script src="~/assets/js/template-draw.js"></script>
+    @if (deviceType == "Baggage Claim") {
+        <script src="~/assets/js/template-draw-baggage-claim.js"></script>
+    } else if (deviceType == "Baggage Claim Information") {
+        <script src="~/assets/js/template-draw-baggage-info.js"></script>
+    } else if (deviceType == "Check-in") {
+        <script src="~/assets/js/template-draw-checkin.js"></script>
+    } else {
+        <script src="~/assets/js/template-draw-board.js"></script>
+    }
+
+    <script>
+    (function () {
+        const TYPE    = '@Html.Raw(deviceType)';
+        const IS_P    = '@ratio' === '9:16';
+        const REFRESH = @refreshMs;
+
+        function paint() {
+            const canvas = document.getElementById('screenCanvas');
+            if (!canvas || typeof DRAWERS === 'undefined') return;
+
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+            let cw, ch;
+
+            if (IS_P) {
+                ch = vh;
+                cw = Math.round(ch * 9 / 16);
+                if (cw > vw) { cw = vw; ch = Math.round(cw * 16 / 9); }
+            } else {
+                cw = vw;
+                ch = Math.round(cw * 9 / 16);
+                if (ch > vh) { ch = vh; cw = Math.round(ch * 16 / 9); }
+            }
+
+            canvas.width  = cw;
+            canvas.height = ch;
+            canvas.style.width  = cw + 'px';
+            canvas.style.height = ch + 'px';
+
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, cw, ch);
+            if (DRAWERS[TYPE]) DRAWERS[TYPE](ctx, cw, ch);
+
+            const el = document.getElementById('lastRefresh');
+            if (el) el.textContent = 'Updated ' + new Date().toLocaleTimeString('th-TH');
+        }
+
+        window.addEventListener('load',   () => requestAnimationFrame(paint));
+        window.addEventListener('resize', () => requestAnimationFrame(paint));
+
+        // Auto-refresh canvas on interval
+        setInterval(() => requestAnimationFrame(paint), REFRESH);
+    })();
+    </script>
+</body>
+</html>

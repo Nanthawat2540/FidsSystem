@@ -1,0 +1,6 @@
+/* ===== PORTRAIT (9:16) — canvas 360×600 ===== */
+.canvas-screen-bg.portrait {
+    width: 360px;
+    height: 600px;
+    margin: 0 auto;
+}

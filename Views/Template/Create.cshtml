@@ -1,0 +1,70 @@
+@{ ViewData["Title"] = "Template Setting"; }
+
+@section TopbarActions {
+    <a asp-action="Index" class="btn-cancel"><i class="bi bi-arrow-left me-1"></i>Back</a>
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/assets/css/template-create.css" asp-append-version="true" />
+}
+
+<div class="card">
+    <form id="createForm" method="post" asp-action="Create">
+
+        <div class="mb-4">
+            <label class="form-label-fids">Template name <span class="required-star">*</span></label>
+            <input type="text" name="Name" id="tmplName" class="form-control-fids"
+                   placeholder="Input template name" required style="max-width:560px;" />
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label-fids">Select Device Type <span class="required-star">*</span></label>
+            <div class="device-type-grid" id="deviceTypeGrid">
+                @{
+                    var deviceTypes = new[] {
+                        new { Key="Baggage Claim",             Label="Baggage Claim",      DefaultRatio="16:9" },
+                        new { Key="Baggage Claim Information", Label="Baggage Claim Info",  DefaultRatio="9:16" },
+                        new { Key="Arrival Information",       Label="Arrival Info",        DefaultRatio="16:9" },
+                        new { Key="Check-in",                  Label="Check-in",            DefaultRatio="16:9" },
+                        new { Key="Departures Information",    Label="Departures Info",     DefaultRatio="16:9" },
+                        new { Key="Departures Gate",           Label="Departures Gate",     DefaultRatio="9:16" },
+                        new { Key="Gate",                      Label="Gate",                DefaultRatio="9:16" },
+                    };
+                }
+                @foreach (var dt in deviceTypes)
+                {
+                    <label class="device-type-card" data-type="@dt.Key" data-ratio="@dt.DefaultRatio">
+                        <span class="dt-check"></span>
+                        <div class="dt-canvas-wrap" data-ratio="@dt.DefaultRatio">
+                            <canvas class="dt-canvas"></canvas>
+                        </div>
+                        <div class="card-label">
+                            <input type="radio" name="DeviceType" value="@dt.Key" required>
+                            @dt.Label
+                            <span class="dt-ratio-tag">@dt.DefaultRatio</span>
+                        </div>
+                    </label>
+                }
+            </div>
+        </div>
+
+        <div class="mb-5" id="ratioSection" style="display:none;">
+            <label class="form-label-fids">Select Aspect Ratio <span class="required-star">*</span></label>
+            <div class="ratio-grid" id="ratioGrid"></div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-3 pt-3" style="border-top:1px solid #f3f6f9;">
+            <a asp-action="Index" class="btn-cancel">Cancel</a>
+            <button type="submit" class="btn-save"><i class="bi bi-check-lg me-1"></i>Save Template</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script src="~/assets/js/template-draw.js"              asp-append-version="true"></script>
+    <script src="~/assets/js/template-draw-board.js"        asp-append-version="true"></script>
+    <script src="~/assets/js/template-draw-baggage-claim.js" asp-append-version="true"></script>
+    <script src="~/assets/js/template-draw-baggage-info.js"  asp-append-version="true"></script>
+    <script src="~/assets/js/template-draw-checkin.js"      asp-append-version="true"></script>
+    <script src="~/assets/js/template-create.js"            asp-append-version="true"></script>
+}
