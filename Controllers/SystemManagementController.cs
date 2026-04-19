@@ -61,7 +61,8 @@ namespace FidsSystem.Controllers
             var r = RequireLogin(); if (r != null) return r;
             var keys = new[] { "BagFirstBag","BagLastBag","BagNoFirstBag","ArrivalWindow",
                                "ArrFirstBag","ArrLastBag","ArrNoFirstBag","DelayThreshold",
-                               "DepWindow","DepRemove" };
+                               "DepWindow","DepRemove",
+                               "AirportNameTH","AirportNameEN","AirportIATA" };
             var settings = keys
                 .Where(k => form.ContainsKey(k))
                 .ToDictionary(k => k, k => form[k].ToString());

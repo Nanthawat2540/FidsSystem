@@ -8,6 +8,9 @@
         <button type="submit" class="btn-search">
             <i class="bi bi-search me-1"></i>View
         </button>
+        <a asp-action="ExportCsv" asp-route-date="@ViewBag.ReportDate" class="btn-edit">
+            <i class="bi bi-download me-1"></i>Export CSV
+        </a>
     </form>
 }
 

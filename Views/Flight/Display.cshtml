@@ -1,5 +1,11 @@
 @model IEnumerable<FidsSystem.Models.Flight>
-@{ Layout = null; bool isArrival = ViewBag.Type == "Arrival"; string orient = ViewBag.Orient ?? "h"; }
+@{
+    Layout = null;
+    bool isArrival = ViewBag.Type == "Arrival";
+    string orient  = ViewBag.Orient ?? "h";
+    string airportTH = ViewBag.AirportNameTH ?? "ท่าอากาศยานนานาชาติ";
+    string airportEN = ViewBag.AirportNameEN ?? "International Airport";
+}
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -26,8 +32,8 @@
                 <div class="airport-pill">
                     <div class="airport-icon">✈</div>
                     <div>
-                        <div class="airport-th">ท่าอากาศยานนานาชาติ</div>
-                        <div class="airport-en">Surat Thani Airport</div>
+                        <div class="airport-th">@airportTH</div>
+                        <div class="airport-en">@airportEN</div>
                     </div>
                 </div>
                 <div class="time-pill" id="current-time"></div>

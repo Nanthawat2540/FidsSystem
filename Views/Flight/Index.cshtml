@@ -4,6 +4,9 @@
 @section TopbarActions {
     @if (ViewBag.CanCreate == true)
     {
+        <a asp-action="Import" class="btn-edit" style="margin-right:6px;">
+            <i class="bi bi-cloud-upload me-1"></i>Import CSV
+        </a>
         <a asp-action="Create" class="btn-add">
             <i class="bi bi-plus-lg"></i> Flight
         </a>
@@ -173,6 +176,29 @@
             </tbody>
         </table>
     </div>
+
+    <!-- Pagination -->
+    @if (ViewBag.TotalPages > 1)
+    {
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 20px; border-top:1px solid var(--border-color);">
+            <span style="font-size:.82rem; color:#7e8299;">
+                Showing @((ViewBag.Page - 1) * ViewBag.PageSize + 1)–@(Math.Min(ViewBag.Page * ViewBag.PageSize, ViewBag.TotalCount))
+                of @ViewBag.TotalCount flights
+            </span>
+            <div style="display:flex; gap:4px;">
+                @for (int pg = 1; pg <= (int)ViewBag.TotalPages; pg++)
+                {
+                    var active = pg == (int)ViewBag.Page;
+                    <a href="@Url.Action("Index", new { search=ViewBag.Search, flightType=ViewBag.FlightType, status=ViewBag.Status, page=pg })"
+                       style="display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:6px; font-size:.82rem; font-weight:@(active?"700":"400"); text-decoration:none;
+                              background:@(active?"#1A6BFA":"var(--card-bg)"); color:@(active?"#fff":"#7e8299");
+                              border:1px solid @(active?"#1A6BFA":"var(--border-color)");">
+                        @pg
+                    </a>
+                }
+            </div>
+        </div>
+    }
 </div>
 
 <!-- Quick-status picker popup -->

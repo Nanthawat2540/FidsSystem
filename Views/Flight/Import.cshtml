@@ -1,0 +1,107 @@
+@{ ViewData["Title"] = "Import Flights (CSV)"; }
+
+@section TopbarActions {
+    <a asp-action="Index" class="btn-cancel">
+        <i class="bi bi-arrow-left me-1"></i>Back
+    </a>
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert-error-inline mb-4"><i class="bi bi-x-circle-fill"></i>@TempData["Error"]</div>
+        }
+
+        <div class="card mb-4">
+            <h5 class="fw-bold mb-3" style="font-size:1.05rem;">
+                <i class="bi bi-cloud-upload me-2" style="color:var(--blue);"></i>Upload CSV File
+            </h5>
+            <form asp-action="Import" method="post" enctype="multipart/form-data">
+                <div style="border:2px dashed var(--border-color); border-radius:10px; padding:2rem; text-align:center; margin-bottom:1.2rem;"
+                     id="dropZone">
+                    <i class="bi bi-file-earmark-spreadsheet" style="font-size:2.5rem; color:#7e8299;"></i>
+                    <div style="margin:10px 0 6px; font-weight:500; color:#e4e6ef;">Drop CSV file here or click to browse</div>
+                    <div style="font-size:.8rem; color:#7e8299;">Supported: .csv — Max 5MB</div>
+                    <input type="file" name="file" id="fileInput" accept=".csv"
+                           style="position:absolute; inset:0; opacity:0; cursor:pointer;" required />
+                </div>
+                <div id="fileLabel" style="display:none; background:rgba(26,107,250,.08); border:1px solid #1A6BFA; border-radius:8px; padding:10px 16px; margin-bottom:1rem; font-size:.88rem; color:#1A6BFA;">
+                    <i class="bi bi-file-earmark-check me-2"></i><span id="fileName"></span>
+                </div>
+                <div class="d-flex justify-content-end">
+                    <button type="submit" class="btn-save">
+                        <i class="bi bi-upload me-1"></i>Import
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Format guide -->
+        <div class="card">
+            <h6 class="fw-bold mb-3" style="color:#7e8299; font-size:.9rem; text-transform:uppercase; letter-spacing:.06em;">
+                <i class="bi bi-info-circle me-2"></i>CSV Format Guide
+            </h6>
+            <div style="font-size:.83rem; color:#b5b5c3; margin-bottom:1rem;">
+                Required columns: <code>FlightNumber</code>, <code>FlightType</code>, <code>ScheduledTime</code>
+                <br>Optional: <code>Airline</code>, <code>Origin</code>, <code>Destination</code>, <code>Gate</code>, <code>Belt</code>, <code>Status</code>, <code>EstimatedTime</code>, <code>Remark</code>
+            </div>
+            <div style="background:var(--sidebar-bg); border-radius:8px; padding:1rem; overflow-x:auto; margin-bottom:1rem;">
+                <pre style="font-size:.78rem; color:#e4e6ef; margin:0;">FlightNumber,FlightType,Airline,Origin,Destination,ScheduledTime,Gate,Belt,Status,Remark
+TG101,Departure,Thai Airways,BKK,URT,2024-04-20 07:00,A1,,On Time,
+FD3301,Departure,Air Asia,DMK,URT,2024-04-20 09:30,A2,,On Time,
+PG103,Arrival,Bangkok Airways,BKK,URT,2024-04-20 08:00,,1,On Time,</pre>
+            </div>
+            <ul style="font-size:.82rem; color:#7e8299; margin:0; padding-left:1.2rem; line-height:2;">
+                <li><code>FlightType</code> — <code>Departure</code> หรือ <code>Arrival</code></li>
+                <li><code>ScheduledTime</code> — รูปแบบ <code>yyyy-MM-dd HH:mm</code> หรือ <code>dd/MM/yyyy HH:mm</code></li>
+                <li><code>Status</code> — ถ้าไม่ระบุจะใช้ <code>On Time</code> เป็นค่าตั้งต้น</li>
+                <li>Header names ไม่สน case (uppercase/lowercase)</li>
+            </ul>
+            <div style="margin-top:1rem;">
+                <a href="#" onclick="downloadTemplate(); return false;" class="btn-edit" style="font-size:.8rem;">
+                    <i class="bi bi-download me-1"></i>Download Template
+                </a>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@section Scripts {
+<script>
+const fileInput = document.getElementById('fileInput');
+const dropZone  = document.getElementById('dropZone');
+const fileLabel = document.getElementById('fileLabel');
+const fileName  = document.getElementById('fileName');
+
+fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) {
+        fileName.textContent = fileInput.files[0].name;
+        fileLabel.style.display = 'block';
+    }
+});
+
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.style.borderColor = '#1A6BFA'; });
+dropZone.addEventListener('dragleave', () => { dropZone.style.borderColor = ''; });
+dropZone.addEventListener('drop', e => {
+    e.preventDefault(); dropZone.style.borderColor = '';
+    const dt = e.dataTransfer;
+    if (dt.files[0]) {
+        fileInput.files = dt.files;
+        fileName.textContent = dt.files[0].name;
+        fileLabel.style.display = 'block';
+    }
+});
+
+function downloadTemplate() {
+    const csv = 'FlightNumber,FlightType,Airline,Origin,Destination,ScheduledTime,Gate,Belt,Status,Remark\nTG101,Departure,Thai Airways,BKK,URT,2024-04-20 07:00,A1,,On Time,\n';
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'flights_template.csv';
+    a.click();
+}
+</script>
+}

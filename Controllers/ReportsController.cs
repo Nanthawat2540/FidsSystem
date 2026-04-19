@@ -57,5 +57,44 @@ namespace FidsSystem.Controllers
             ViewBag.ReportDate = reportDate.ToString("yyyy-MM-dd");
             return View(report);
         }
+
+        [HttpGet]
+        public async Task<IActionResult> ExportCsv(string? date)
+        {
+            var r = RequireLogin(); if (r != null) return r;
+
+            var reportDate = string.IsNullOrEmpty(date)
+                ? DateTime.Today
+                : DateTime.Parse(date);
+
+            var all = await _flightService.GetAllFlightsAsync();
+            var flights = all.Where(f => f.ScheduledTime.Date == reportDate.Date)
+                             .OrderBy(f => f.ScheduledTime).ToList();
+
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("FlightNumber,FlightType,Airline,Origin,Destination,ScheduledTime,EstimatedTime,Gate,Belt,Status,Remark");
+            foreach (var f in flights)
+            {
+                sb.AppendLine(string.Join(",",
+                    Esc(f.FlightNumber), Esc(f.FlightType), Esc(f.Airline), Esc(f.Origin),
+                    Esc(f.Destination), f.ScheduledTime.ToString("yyyy-MM-dd HH:mm"),
+                    f.EstimatedTime?.ToString("yyyy-MM-dd HH:mm") ?? "",
+                    Esc(f.Gate), Esc(f.Belt), Esc(f.Status), Esc(f.Remark)));
+            }
+
+            var bytes = System.Text.Encoding.UTF8.GetPreamble()
+                .Concat(System.Text.Encoding.UTF8.GetBytes(sb.ToString()))
+                .ToArray();
+
+            return File(bytes, "text/csv", $"flights_{reportDate:yyyy-MM-dd}.csv");
+        }
+
+        private static string Esc(string? s)
+        {
+            if (s == null) return "";
+            if (s.Contains(',') || s.Contains('"') || s.Contains('\n'))
+                return $"\"{s.Replace("\"", "\"\"")}\"";
+            return s;
+        }
     }
 }

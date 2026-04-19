@@ -96,6 +96,34 @@
 
         <hr class="settings-divider" />
 
+        <!-- 0. Airport Identity -->
+        <div class="settings-section">
+            <h6>0. Airport Information</h6>
+            <div class="settings-row">
+                <label class="settings-label">Airport Name (Thai)</label>
+                <div class="settings-input-wrap" style="flex:1; max-width:360px;">
+                    <input type="text" name="AirportNameTH" class="settings-input"
+                           style="width:100%;" value="@V("AirportNameTH","ท่าอากาศยานนานาชาติสุราษฎร์ธานี")" />
+                </div>
+            </div>
+            <div class="settings-row">
+                <label class="settings-label">Airport Name (English)</label>
+                <div class="settings-input-wrap" style="flex:1; max-width:360px;">
+                    <input type="text" name="AirportNameEN" class="settings-input"
+                           style="width:100%;" value="@V("AirportNameEN","Surat Thani Airport")" />
+                </div>
+            </div>
+            <div class="settings-row">
+                <label class="settings-label">IATA Code</label>
+                <div class="settings-input-wrap">
+                    <input type="text" name="AirportIATA" class="settings-input"
+                           style="width:80px;" maxlength="3" value="@V("AirportIATA","URT")" />
+                </div>
+            </div>
+        </div>
+
+        <hr class="settings-divider" />
+
         <!-- 3. Departure Flights -->
         <div class="settings-section">
             <h6>3. Departure Flights Information</h6>

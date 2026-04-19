@@ -1,0 +1,210 @@
+@using FidsSystem.Models
+@{ ViewData["Title"] = "Dashboard"; }
+
+@{
+    var upDep  = ViewBag.UpcomingDep  as List<Flight> ?? [];
+    var upArr  = ViewBag.UpcomingArr  as List<Flight> ?? [];
+    var alerts = ViewBag.Alerts       as List<Alert>  ?? [];
+}
+
+<!-- Stat cards -->
+<div style="display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px;">
+    <div class="dash-stat" style="--c:#1A6BFA;">
+        <div class="dash-stat-icon"><i class="bi bi-airplane"></i></div>
+        <div class="dash-stat-body">
+            <div class="dash-stat-val">@ViewBag.TotalDep</div>
+            <div class="dash-stat-lbl">Departures Today</div>
+        </div>
+    </div>
+    <div class="dash-stat" style="--c:#06B6D4;">
+        <div class="dash-stat-icon"><i class="bi bi-airplane-fill" style="transform:rotate(180deg);display:inline-block;"></i></div>
+        <div class="dash-stat-body">
+            <div class="dash-stat-val">@ViewBag.TotalArr</div>
+            <div class="dash-stat-lbl">Arrivals Today</div>
+        </div>
+    </div>
+    <div class="dash-stat" style="--c:#F59E0B;">
+        <div class="dash-stat-icon"><i class="bi bi-clock-history"></i></div>
+        <div class="dash-stat-body">
+            <div class="dash-stat-val">@ViewBag.Delayed</div>
+            <div class="dash-stat-lbl">Delayed</div>
+        </div>
+    </div>
+    <div class="dash-stat" style="--c:#EF4444;">
+        <div class="dash-stat-icon"><i class="bi bi-x-circle"></i></div>
+        <div class="dash-stat-body">
+            <div class="dash-stat-val">@ViewBag.Cancelled</div>
+            <div class="dash-stat-lbl">Cancelled</div>
+        </div>
+    </div>
+</div>
+
+<!-- Second row stats -->
+<div style="display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px;">
+    <div class="dash-stat" style="--c:#10B981;">
+        <div class="dash-stat-icon"><i class="bi bi-check-circle"></i></div>
+        <div class="dash-stat-body">
+            <div class="dash-stat-val">@ViewBag.OnTime</div>
+            <div class="dash-stat-lbl">On Time</div>
+        </div>
+    </div>
+    <div class="dash-stat" style="--c:#6366F1;">
+        <div class="dash-stat-icon"><i class="bi bi-door-open"></i></div>
+        <div class="dash-stat-body">
+            <div class="dash-stat-val">@ViewBag.Boarding</div>
+            <div class="dash-stat-lbl">Boarding / Final Call</div>
+        </div>
+    </div>
+    <div class="dash-stat" style="--c:#8B5CF6;">
+        <div class="dash-stat-icon"><i class="bi bi-send-check"></i></div>
+        <div class="dash-stat-body">
+            <div class="dash-stat-val">@ViewBag.Departed</div>
+            <div class="dash-stat-lbl">Departed</div>
+        </div>
+    </div>
+    <div class="dash-stat" style="--c:#0EA5E9;">
+        <div class="dash-stat-icon"><i class="bi bi-arrow-down-circle"></i></div>
+        <div class="dash-stat-body">
+            <div class="dash-stat-val">@ViewBag.Landed</div>
+            <div class="dash-stat-lbl">Landed</div>
+        </div>
+    </div>
+</div>
+
+<!-- Bottom panels -->
+<div style="display:grid; grid-template-columns:1fr 1fr 340px; gap:16px; align-items:start;">
+
+    <!-- Upcoming Departures -->
+    <div class="card" style="padding:0;">
+        <div style="padding:14px 18px; border-bottom:1px solid var(--border-color); font-weight:600; display:flex; align-items:center; gap:8px;">
+            <i class="bi bi-airplane" style="color:#1A6BFA;"></i> Upcoming Departures
+            <span style="font-size:.75rem; color:#7e8299; font-weight:400; margin-left:auto;">Next 3 hours</span>
+        </div>
+        @if (!upDep.Any())
+        {
+            <div class="empty-state" style="padding:2rem;"><i class="bi bi-airplane"></i><p>No upcoming departures</p></div>
+        }
+        else
+        {
+            <table class="table" style="margin:0;">
+                <thead><tr>
+                    <th>Flight</th><th>To</th><th>Time</th><th>Gate</th><th>Status</th>
+                </tr></thead>
+                <tbody>
+                @foreach (var f in upDep)
+                {
+                    var sc = f.Status switch {
+                        "On Time"       => "#10B981", "Delayed" => "#F59E0B",
+                        "Boarding"      => "#1A6BFA", "Final Call" => "#F97316",
+                        "Check-In Open" => "#6366F1", _ => "#b5b5c3"
+                    };
+                    <tr>
+                        <td class="fw-600">@f.FlightNumber</td>
+                        <td style="color:#7e8299;">@(f.Destination ?? "-")</td>
+                        <td style="font-size:.82rem; color:#7e8299;">@f.ScheduledTime.ToString("HH:mm")</td>
+                        <td><span style="background:rgba(26,107,250,.12); color:#1A6BFA; padding:1px 8px; border-radius:6px; font-size:.78rem; font-weight:600;">@(f.Gate ?? "-")</span></td>
+                        <td style="color:@sc; font-size:.78rem; font-weight:700;">@(f.Status ?? "-")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+    </div>
+
+    <!-- Upcoming Arrivals -->
+    <div class="card" style="padding:0;">
+        <div style="padding:14px 18px; border-bottom:1px solid var(--border-color); font-weight:600; display:flex; align-items:center; gap:8px;">
+            <i class="bi bi-airplane-fill" style="color:#06B6D4; transform:rotate(180deg); display:inline-block;"></i> Upcoming Arrivals
+            <span style="font-size:.75rem; color:#7e8299; font-weight:400; margin-left:auto;">Next 3 hours</span>
+        </div>
+        @if (!upArr.Any())
+        {
+            <div class="empty-state" style="padding:2rem;"><i class="bi bi-airplane-fill"></i><p>No upcoming arrivals</p></div>
+        }
+        else
+        {
+            <table class="table" style="margin:0;">
+                <thead><tr>
+                    <th>Flight</th><th>From</th><th>Time</th><th>Belt</th><th>Status</th>
+                </tr></thead>
+                <tbody>
+                @foreach (var f in upArr)
+                {
+                    var sc = f.Status switch {
+                        "On Time"  => "#10B981", "Delayed"  => "#F59E0B",
+                        "Landed"   => "#06B6D4", "Expected" => "#8B5CF6",
+                        _ => "#b5b5c3"
+                    };
+                    <tr>
+                        <td class="fw-600">@f.FlightNumber</td>
+                        <td style="color:#7e8299;">@(f.Origin ?? "-")</td>
+                        <td style="font-size:.82rem; color:#7e8299;">@f.ScheduledTime.ToString("HH:mm")</td>
+                        <td><span style="background:rgba(6,182,212,.12); color:#06B6D4; padding:1px 8px; border-radius:6px; font-size:.78rem; font-weight:600;">@(f.Belt ?? "-")</span></td>
+                        <td style="color:@sc; font-size:.78rem; font-weight:700;">@(f.Status ?? "-")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+    </div>
+
+    <!-- Alerts panel -->
+    <div class="card" style="padding:0;">
+        <div style="padding:14px 18px; border-bottom:1px solid var(--border-color); font-weight:600; display:flex; align-items:center; gap:8px;">
+            <i class="bi bi-bell" style="color:#F59E0B;"></i> Active Alerts
+            <a asp-controller="Alerts" asp-action="Index" style="font-size:.75rem; color:#1A6BFA; margin-left:auto; text-decoration:none;">View all</a>
+        </div>
+        @if (!alerts.Any())
+        {
+            <div class="empty-state" style="padding:2rem;">
+                <i class="bi bi-shield-check" style="color:#10B981;"></i>
+                <p>All clear</p>
+            </div>
+        }
+        else
+        {
+            <div style="padding:8px;">
+            @foreach (var a in alerts)
+            {
+                var sc = a.Severity switch {
+                    AlertSeverity.Critical => "#EF4444",
+                    AlertSeverity.Warning  => "#F59E0B",
+                    _ => "#6366F1"
+                };
+                <div style="padding:10px 12px; border-radius:8px; border:1px solid var(--border-color); margin-bottom:6px;">
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:3px;">
+                        <i class="bi bi-exclamation-circle" style="color:@sc;"></i>
+                        <span style="font-size:.82rem; font-weight:600; color:#e4e6ef;">@a.Title</span>
+                    </div>
+                    <div style="font-size:.75rem; color:#7e8299;">@a.FlightNumber — @a.CreatedAt.ToString("HH:mm")</div>
+                </div>
+            }
+            </div>
+        }
+    </div>
+</div>
+
+@section Styles {
+<style>
+.dash-stat {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 20px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    border-left: 3px solid var(--c, #1A6BFA);
+}
+.dash-stat-icon {
+    width: 44px; height: 44px;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--c) 12%, transparent);
+    color: var(--c);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem; flex-shrink: 0;
+}
+.dash-stat-val  { font-size: 1.9rem; font-weight: 700; line-height: 1; color: #e4e6ef; }
+.dash-stat-lbl  { font-size: .75rem; color: #7e8299; margin-top: 3px; }
+</style>
+}

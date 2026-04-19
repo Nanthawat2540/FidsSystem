@@ -94,7 +94,7 @@
                     </div>
                 </div>
 
-                <div class="row g-3 mb-4">
+                <div class="row g-3 mb-3">
                     <div class="col-md-6">
                         <label class="form-label-fids">Gate</label>
                         <div class="input-icon-wrap">
@@ -113,6 +113,12 @@
                                    placeholder="e.g. 3" />
                         </div>
                     </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label-fids">Remark</label>
+                    <textarea name="Remark" class="form-control-fids" rows="2"
+                              placeholder="e.g. Via Chiang Mai, Special handling...">@Model?.Remark</textarea>
                 </div>
 
                 <div asp-validation-summary="ModelOnly" class="alert-error-inline mb-3"></div>
