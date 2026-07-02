@@ -27,7 +27,7 @@
                     <input type="file" name="file" id="fileInput" accept=".csv"
                            style="position:absolute; inset:0; opacity:0; cursor:pointer;" required />
                 </div>
-                <div id="fileLabel" style="display:none; background:rgba(26,107,250,.08); border:1px solid #1A6BFA; border-radius:8px; padding:10px 16px; margin-bottom:1rem; font-size:.88rem; color:#1A6BFA;">
+                <div id="fileLabel" style="display:none; background:var(--blue-light); border:1px solid var(--blue); border-radius:8px; padding:10px 16px; margin-bottom:1rem; font-size:.88rem; color:var(--blue-dark);">
                     <i class="bi bi-file-earmark-check me-2"></i><span id="fileName"></span>
                 </div>
                 <div class="d-flex justify-content-end">
@@ -83,7 +83,7 @@ fileInput.addEventListener('change', () => {
     }
 });
 
-dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.style.borderColor = '#1A6BFA'; });
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.style.borderColor = '#7a9fc9'; });
 dropZone.addEventListener('dragleave', () => { dropZone.style.borderColor = ''; });
 dropZone.addEventListener('drop', e => {
     e.preventDefault(); dropZone.style.borderColor = '';

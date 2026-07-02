@@ -191,8 +191,8 @@
                     var active = pg == (int)ViewBag.Page;
                     <a href="@Url.Action("Index", new { search=ViewBag.Search, flightType=ViewBag.FlightType, status=ViewBag.Status, page=pg })"
                        style="display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:6px; font-size:.82rem; font-weight:@(active?"700":"400"); text-decoration:none;
-                              background:@(active?"#1A6BFA":"var(--card-bg)"); color:@(active?"#fff":"#7e8299");
-                              border:1px solid @(active?"#1A6BFA":"var(--border-color)");">
+                              background:@(active?"var(--blue-dark)":"var(--card-bg)"); color:@(active?"#fff":"#7e8299");
+                              border:1px solid @(active?"var(--blue-dark)":"var(--border-color)");">
                         @pg
                     </a>
                 }

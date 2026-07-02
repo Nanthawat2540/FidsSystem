@@ -73,7 +73,7 @@
                                      font-size:.72rem; font-weight:700;">@u.Role</span>
                         @if (!string.IsNullOrEmpty(u.AirlineCode))
                         {
-                            <span style="background:#0a2440; color:#06B6D4; padding:2px 8px;
+                            <span style="background:var(--blue-light); color:var(--blue-dark); padding:2px 8px;
                                          border-radius:12px; font-size:.72rem; font-weight:600; margin-left:6px;">
                                 @u.AirlineCode
                             </span>
@@ -264,7 +264,7 @@
     border-radius: 50%;
     transition: .2s;
 }
-.perm-toggle input:checked + .perm-slider             { background:#1A6BFA; border-color:#1A6BFA; }
+.perm-toggle input:checked + .perm-slider             { background:var(--blue-dark); border-color:var(--blue-dark); }
 .perm-toggle input:checked + .perm-slider:before      { background:#fff; transform: translateX(16px); }
 .perm-toggle input:disabled + .perm-slider            { opacity:.45; cursor:not-allowed; }
 
