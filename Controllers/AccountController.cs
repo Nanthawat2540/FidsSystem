@@ -1,4 +1,7 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Text;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using FidsSystem.Helpers;
 using FidsSystem.Models;
 using FidsSystem.Services;
@@ -9,18 +12,45 @@ namespace FidsSystem.Controllers
     {
         private readonly IAuthService      _authService;
         private readonly IAdminUserService _userService;
+        private readonly IConfiguration    _config;
 
-        public AccountController(IAuthService authService, IAdminUserService userService)
+        private const string CentralAuthUrl = "https://auth.pastechs.com/auth/login";
+        private const string CallbackPath   = "/Account/Callback";
+
+        public AccountController(IAuthService authService, IAdminUserService userService, IConfiguration config)
         {
             _authService = authService;
             _userService = userService;
+            _config      = config;
         }
 
+        // GET /Account/Login  →  redirect ไป CentralAuth
         public IActionResult Login()
         {
             if (HttpContext.Session.GetString("UserId") != null)
                 return RedirectToDefault();
-            return View();
+
+            var callbackUri  = $"{Request.Scheme}://{Request.Host}{CallbackPath}";
+            var centralLogin = $"{CentralAuthUrl}?app_id=fids&redirect_uri={Uri.EscapeDataString(callbackUri)}";
+            return Redirect(centralLogin);
+        }
+
+        // GET /Account/Callback?token=JWT  ←  รับจาก CentralAuth
+        public IActionResult Callback(string? token)
+        {
+            if (string.IsNullOrEmpty(token))
+                return RedirectToAction("Login");
+
+            var payload = VerifyToken(token);
+            if (payload is null)
+                return RedirectToAction("Login");
+
+            HttpContext.Session.SetString("UserId",      payload.Uid);
+            HttpContext.Session.SetString("Username",    payload.Username);
+            HttpContext.Session.SetString("Role",        payload.Role);
+            HttpContext.Session.SetString("AirlineCode", "");
+
+            return RedirectToDefault();
         }
 
         [HttpPost]
@@ -109,5 +139,37 @@ namespace FidsSystem.Controllers
                 _             => RedirectToAction("Index", "Dashboard")
             };
         }
+
+        private CentralPayload? VerifyToken(string token)
+        {
+            try
+            {
+                var secret  = _config["CentralAuth:JwtSecret"]
+                              ?? "pastechs-central-auth-jwt-secret-2026-shared-across-all-apps-64chars!";
+                var key     = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
+                var handler = new JwtSecurityTokenHandler();
+                handler.ValidateToken(token, new TokenValidationParameters
+                {
+                    ValidateIssuer           = true,
+                    ValidIssuer              = "central-auth",
+                    ValidateAudience         = false,
+                    ValidateLifetime         = true,
+                    IssuerSigningKey         = key,
+                    ClockSkew                = TimeSpan.Zero,
+                }, out var validated);
+
+                var jwt = (JwtSecurityToken)validated;
+                return new CentralPayload(
+                    Uid:         jwt.Claims.FirstOrDefault(c => c.Type == "uid")?.Value          ?? "",
+                    Username:    jwt.Claims.FirstOrDefault(c => c.Type == "username")?.Value     ?? "",
+                    Email:       jwt.Claims.FirstOrDefault(c => c.Type == "email")?.Value        ?? "",
+                    DisplayName: jwt.Claims.FirstOrDefault(c => c.Type == "display_name")?.Value ?? "",
+                    Role:        jwt.Claims.FirstOrDefault(c => c.Type == "role")?.Value         ?? "user"
+                );
+            }
+            catch { return null; }
+        }
+
+        private record CentralPayload(string Uid, string Username, string Email, string DisplayName, string Role);
     }
 }
