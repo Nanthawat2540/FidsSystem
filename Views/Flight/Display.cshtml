@@ -55,7 +55,7 @@
         <div class="flight-board">
             @foreach (var item in Model)
             {
-                <div class="flight-row @(isArrival ? "arr-cols" : "dep-cols")">
+                <div class="flight-row @(isArrival ? "arr-cols" : "dep-cols") @GetRowClass(item.Status)">
                     <div class="flight-number">@item.FlightNumber</div>
                     <div class="airline">
                         <span class="airline-logo @GetAirlineClass(item.Airline)">@(item.Airline ?? "-")</span>
@@ -164,6 +164,7 @@
             "BOARDING"       or "กำลังขึ้นเครื่อง"
                              or "ลงทะเบียนรับบัตรที่นั่ง"  => "BOARDING",
             "GATE OPEN"      or "ประตูเปิด"                 => "GATE_OPEN",
+            "FINAL CALL"                                   => "FINAL_CALL",
             "DELAYED"        or "ล่าช้า"                    => "DELAYED",
             "CANCELLED"      or "ยกเลิก"                   => "CANCELLED",
             "LANDED"         or "ลงจอดแล้ว"                => "LANDED",
@@ -182,31 +183,49 @@
         return key switch {
             "CHECKIN_OPEN" => "เปิดให้เช็คอิน",
             "BOARDING"     => "กำลังขึ้นเครื่อง",
+            "FINAL_CALL"   => "Final Call",
             "GATE_OPEN"    => "ประตูเปิด",
+            "ON_TIME"      => "ตรงเวลา",
             "DELAYED"      => "ล่าช้า",
             "CANCELLED"    => "ยกเลิก",
             "LANDED"       => "ลงจอดแล้ว",
             "BAGGAGE"      => "รับสัมภาระ",
             "EXPECTED"     => "คาดว่าจะถึง",
             "DEPARTED"     => "ออกเดินทางแล้ว",
-            "ON_TIME"      => "ตรงเวลา",
             _ => status ?? "-"
         };
     }
 
     string GetStatusClass(string? status) {
         if (string.IsNullOrEmpty(status)) return "s-default";
-        return status.ToUpper() switch {
-            "CHECK-IN OPEN"  or "เปิดให้เช็คอิน"          => "s-checkin",
-            "BOARDING"       or "ลงทะเบียนรับบัตรที่นั่ง"
-                             or "กำลังขึ้นเครื่อง"         => "s-boarding",
-            "GATE OPEN"      or "ประตูเปิด"                 => "s-gateopen",
-            "DELAYED"        or "ล่าช้า"                    => "s-delayed",
-            "CANCELLED"      or "ยกเลิก"                   => "s-cancelled",
-            "LANDED"         or "ลงจอดแล้ว"                => "s-landed",
-            "BAGGAGE"        or "รับสัมภาระ"               => "s-baggage",
-            "EXPECTED"       or "คาดว่าจะถึง"              => "s-expected",
+        return status.ToUpper().Trim() switch {
+            "CHECK-IN OPEN"  or "เปิดให้เช็คอิน"                    => "s-checkin",
+            "BOARDING"       or "กำลังขึ้นเครื่อง"
+                             or "ลงทะเบียนรับบัตรที่นั่ง"             => "s-boarding",
+            "FINAL CALL"                                              => "s-finalcall",
+            "GATE OPEN"      or "ประตูเปิด"                           => "s-gateopen",
+            "ON TIME"        or "ตรงเวลา"                             => "s-ontime",
+            "DELAYED"        or "ล่าช้า"                              => "s-delayed",
+            "CANCELLED"      or "ยกเลิก"                             => "s-cancelled",
+            "DEPARTED"       or "ออกเดินทางแล้ว"                     => "s-departed",
+            "LANDED"         or "ลงจอดแล้ว"                          => "s-landed",
+            "BAGGAGE"        or "รับสัมภาระ"  or "BAGGAGE CLAIM"     => "s-baggage",
+            "EXPECTED"       or "คาดว่าจะถึง"                        => "s-expected",
             _ => "s-default"
+        };
+    }
+
+    string GetRowClass(string? status) {
+        if (string.IsNullOrEmpty(status)) return "";
+        return status.ToUpper().Trim() switch {
+            "BOARDING"    or "กำลังขึ้นเครื่อง"
+                          or "ลงทะเบียนรับบัตรที่นั่ง"  => "row-boarding",
+            "FINAL CALL"                                  => "row-finalcall",
+            "DELAYED"     or "ล่าช้า"                    => "row-delayed",
+            "CANCELLED"   or "ยกเลิก"                   => "row-cancelled",
+            "ON TIME"     or "ตรงเวลา"                   => "row-ontime",
+            "LANDED"      or "ลงจอดแล้ว"                => "row-landed",
+            _ => ""
         };
     }
 }
